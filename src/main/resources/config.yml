@@ -1,0 +1,147 @@
+# MonaBowling 0.5.0-alpha.12 — Bedrock visuals + balanced 100-pin physics
+# Paper 26.1.2 / Java 25 / BungeeCord Hub
+
+# Display language. The Phase 5 alpha includes Japanese messages.
+language: ja_JP
+
+game-modes:
+  standard: true
+  hundred-pin: true
+  spin-control: true
+
+matches:
+  # Maximum number of matches that may be active across all lanes.
+  max-concurrent: 4
+  # 100-pin mode is heavier and is restricted independently.
+  max-concurrent-hundred-pin: 1
+  # One lane supports turn-based play for up to four players.
+  max-players-per-lane: 4
+  # A player forfeits a turn after this many seconds.
+  turn-timeout-seconds: 45
+  # Grace period for reconnecting to an interrupted match.
+  reconnect-grace-seconds: 90
+
+gameplay:
+  # First use starts charging; second use releases. This is also the automatic-release time.
+  maximum-charge-millis: 1600
+  minimum-throw-speed: 4.0
+  maximum-throw-speed: 12.0
+  # Yaw change while charging is converted to angular spin with this multiplier.
+  spin-per-yaw-degree: 0.16
+  # Minecraft-readable standard rack. Wider than regulation scale so every row stays visible.
+  rack-spacing: 0.52
+  lane-half-width: 2.70
+  gutter-width: 0.40
+  # Standard-mode side walls act as bumpers.
+  side-bumpers: true
+  # Legacy compatibility value. Upright pins are no longer scored as fallen
+  # merely because they slid away from their original position.
+  pin-displacement-threshold: 0.55
+  # Visual pinsetter lift/reset delay.
+  pinsetter-reset-ticks: 30
+
+hundred-pin:
+  # The rack uses the 91-pin 13-row triangle plus a centred nine-pin rear row.
+  rack-spacing: 0.46
+  # Wider physical deck for the 100-pin triangular rack. Standard mode remains regulation-like.
+  lane-half-width: 3.00
+  gutter-width: 0.40
+  # The lane-facing wall is a bumper; the narrow wall top remains the secret route.
+  side-bumpers: true
+  secret-strike:
+    # A roll must remain over one guard from the foul line to the rear switch.
+    enabled: true
+    # Narrow wall-top line beside the slab gutter. Missing it becomes a gutter.
+    rail-minimum-x: 3.22
+    rail-maximum-x: 3.29
+    arming-maximum-z: 1.0
+    # Distance behind the final pin row where the hidden switch is evaluated.
+    switch-offset: 0.65
+
+input:
+  # Java mouse yaw multiplier. Bedrock multipliers are under geyser below.
+  java-yaw-sensitivity: 1.0
+  # Small camera noise inside this angle does not create spin.
+  spin-deadzone-degrees: 1.25
+  maximum-spin: 18.0
+  # While charging, press sneak/Shift to release immediately with a hook.
+  sneak-release-spin-enabled: true
+  sneak-release-minimum-spin: 6.0
+  sneak-release-maximum-spin: 16.0
+  # Filters duplicate use/attack packets without making normal double-use controls sluggish.
+  debounce-millis: 120
+  # Owner-only END_ROD points show the current throw direction while aiming.
+  guide-particles: true
+
+physics:
+  # Phase 3 starts the deterministic fixed-step engine only during a roll.
+  fixed-hz: 120
+  worker-threads: 1
+  max-catch-up-steps: 4
+  lane:
+    side-bumper-restitution: 0.72
+    side-bumper-tangential-retention: 0.96
+  ball:
+    radius: 0.1085
+    mass: 6.8
+    lane-friction: 0.018
+    gutter-friction: 0.055
+    spin-multiplier: 1.0
+    spin-curve-coefficient: 0.012
+    spin-decay: 0.18
+    restitution: 0.30
+    maximum-speed: 12.0
+  pin:
+    # Matches half of rendering.pin-width, keeping visual and physical contact aligned.
+    radius: 0.13
+    # Extra horizontal sweep as a pin tilts; lets fallen pins carry into neighbours.
+    fallen-sweep-radius: 0.24
+    mass: 2.7
+    restitution: 0.34
+    linear-friction: 1.35
+    angular-damping: 1.4
+    tipping-threshold-degrees: 8.0
+    down-threshold-degrees: 34.0
+    sleep-speed: 0.04
+    sleep-steps: 24
+  collision:
+    continuous-detection: true
+    broadphase-cell-size: 0.5
+    maximum-substeps: 12
+
+rendering:
+  interpolation: true
+  view-distance: 48.0
+  maximum-display-updates-per-tick: 256
+  # Enlarged from real-world scale for Minecraft camera readability.
+  pin-width: 0.26
+  pin-height: 0.78
+  particles-enabled: true
+  sounds-enabled: true
+  replay-enabled: true
+
+geyser:
+  enabled: true
+  # Uses ordinary use/interact packets so Bedrock players do not need a mod.
+  alternative-input: true
+  # Bedrock has no native Java Display Entity. Use native item entities that Geyser always maps.
+  armor-stand-fallback: true
+  keyboard-mouse-sensitivity: 0.95
+  touch-sensitivity: 0.72
+  controller-sensitivity: 0.88
+  unknown-input-sensitivity: 0.82
+
+database:
+  file: bowling.db
+  busy-timeout-millis: 5000
+
+citizens:
+  # /setnpc creates or moves this receptionist. Right-click opens /bowmenu.
+  npc-id: -1
+  npc-name: "ボウリング受付"
+  skin-url: "https://raw.githubusercontent.com/MONAKASERVER/mona-resource-studio/main/assets/monabowling/bowling-pin.png"
+
+debug:
+  enabled: false
+  profile-physics: false
+  profile-rendering: false

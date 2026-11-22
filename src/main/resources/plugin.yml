@@ -1,0 +1,33 @@
+name: MonaBowling
+version: ${version}
+main: net.monacraft.bowling.MonaBowlingPlugin
+api-version: '26.1'
+authors: [MONAKA SERVER]
+description: Server-authoritative bowling engine for the MONAKA Hub
+softdepend: [Citizens, WorldGuard, PlaceholderAPI, floodgate, Geyser-Spigot]
+commands:
+  bowmenu:
+    description: Opens the MonaBowling lane and multiplayer menu
+    usage: /bowmenu
+    permission: monabowling.play
+  bowling:
+    description: MonaBowling menu, statistics and administration
+    usage: /bowling [join|leave|client|stats|top|help|admin]
+    permission: monabowling.play
+  setnpc:
+    description: Creates or moves the Citizens bowling receptionist NPC
+    usage: /setnpc
+    permission: monabowling.admin
+permissions:
+  monabowling.play:
+    description: Allows normal MonaBowling commands
+    default: true
+  monabowling.spectate:
+    description: Allows spectating a bowling match
+    default: true
+  monabowling.admin:
+    description: Allows lane administration and diagnostics
+    default: op
+    children:
+      monabowling.play: true
+      monabowling.spectate: true

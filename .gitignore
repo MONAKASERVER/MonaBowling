@@ -1,0 +1,9 @@
+.gradle/
+build/
+dist/
+.codex-work/
+.pydeps/
+run/
+*.db
+*.db-shm
+*.db-wal
