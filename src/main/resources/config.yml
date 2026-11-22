@@ -1,13 +1,13 @@
-# MonaBowling 0.5.0-alpha.12 — Bedrock visuals + balanced 100-pin physics
+# MonaBowling 0.6.0-alpha.13 — wall dodge + cross-play obstacle rendering
 # Paper 26.1.2 / Java 25 / BungeeCord Hub
 
-# Display language. The Phase 5 alpha includes Japanese messages.
+# Display language. The Phase 6 alpha includes Japanese messages.
 language: ja_JP
 
 game-modes:
   standard: true
   hundred-pin: true
-  spin-control: true
+  wall-dodge: true
 
 matches:
   # Maximum number of matches that may be active across all lanes.
@@ -57,6 +57,15 @@ hundred-pin:
     arming-maximum-z: 1.0
     # Distance behind the final pin row where the hidden switch is evaluated.
     switch-offset: 0.65
+
+wall-dodge:
+  # The ten stages use normal ten-pin scoring with progressively harder gates.
+  # Real server blocks are used for walls, so Java and Bedrock see the same course.
+  wall-material: IRON_BLOCK
+  wall-thickness: 0.34
+  restitution: 0.38
+  # The original challenge has gutters rather than side bumpers.
+  side-bumpers: false
 
 input:
   # Java mouse yaw multiplier. Bedrock multipliers are under geyser below.

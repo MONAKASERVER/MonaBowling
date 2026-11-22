@@ -56,7 +56,12 @@ public final class BowlingMenu implements Listener {
             }
             inventory.setItem(15, item(Material.BARRIER, "退出", List.of("参加中のゲームから抜ける")));
         } else {
-            inventory.setItem(10, item(mode == GameMode.HUNDRED_PIN ? Material.GOLD_BLOCK : Material.BONE_BLOCK,
+            Material modeIcon = switch (mode) {
+                case STANDARD -> Material.BONE_BLOCK;
+                case HUNDRED_PIN -> Material.GOLD_BLOCK;
+                case WALL_DODGE -> Material.IRON_BLOCK;
+            };
+            inventory.setItem(10, item(modeIcon,
                     "モード: " + mode.displayName(), List.of("クリックで切り替え")));
             inventory.setItem(12, item(Material.COMPASS, "レーン: " + (laneId == null ? "空きなし" : laneId),
                     List.of("クリックで空きレーンを切り替え")));
@@ -105,7 +110,7 @@ public final class BowlingMenu implements Listener {
             if (!holder.owner.equals(player.getUniqueId())) return;
             int slot = event.getRawSlot();
             if (slot == 10 && !games.isInMatch(player.getUniqueId())) {
-                GameMode mode = holder.mode == GameMode.STANDARD ? GameMode.HUNDRED_PIN : GameMode.STANDARD;
+                GameMode mode = nextMode(holder.mode);
                 openMain(player, mode, null, holder.maximumPlayers);
             } else if (slot == 12 && !games.isInMatch(player.getUniqueId())) {
                 List<LaneDefinition> lanes = games.availableLanes(holder.mode);
@@ -162,6 +167,15 @@ public final class BowlingMenu implements Listener {
             }
         }
         return lanes.getFirst().id();
+    }
+
+    private GameMode nextMode(GameMode current) {
+        GameMode[] modes = GameMode.values();
+        for (int offset = 1; offset <= modes.length; offset++) {
+            GameMode candidate = modes[(current.ordinal() + offset) % modes.length];
+            if (plugin.settings().enabledModes().contains(candidate)) return candidate;
+        }
+        return current;
     }
 
     private static ItemStack item(Material material, String name, List<String> lore) {

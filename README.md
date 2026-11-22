@@ -5,8 +5,8 @@ The target runtime is Paper 26.1.2 on Java 25 behind BungeeCord, with Java and
 Bedrock players sharing the same lane state.
 
 This repository currently contains the **Phase 1 foundation, Phase 2 physics,
-Phase 3 ten-pin loop, Phase 4 Java/Bedrock compatibility layer and Phase 5
-100-pin mode**. It is an installable alpha.
+Phase 3 ten-pin loop, Phase 4 Java/Bedrock compatibility layer, Phase 5
+100-pin mode and Phase 6 wall-dodge mode**. It is an installable alpha.
 
 ## Phase status
 
@@ -17,7 +17,7 @@ Phase 3 ten-pin loop, Phase 4 Java/Bedrock compatibility layer and Phase 5
 | 3 — 10 pin | Complete | World BlockDisplay rendering, two-use throw input, pinsetter, official scoring, splits and completed-game persistence |
 | 4 — Cross-play | Complete in code; device QA pending | Floodgate/Geyser detection, input calibration, alternate attack input, guide particles and native-item fallback |
 | 5 — 100 pin | Complete in code; device/game-balance QA pending | 100-pin rack, 3000-point scoring, broadphase/render budgets, cascade effects and guard-rail secret strike |
-| 6 — Spin control | Not started | Data-driven obstacle stages and scoring |
+| 6 — Wall dodge | Complete in code; device/game-balance QA pending | Ten escalating obstacle stages, cross-play wall blocks, continuous collision and standard scoring |
 | 7 — Polish | In progress | 1–4 player turn rotation and GUI lobby delivered; recovery, spectators, replay, effects and load tests remain |
 
 ## Runtime design
@@ -66,6 +66,12 @@ Phase 3 ten-pin loop, Phase 4 Java/Bedrock compatibility layer and Phase 5
   line, beginning near the foul line and reaching its visible rear red switch.
   The lane-facing wall remains a bumper; missing or leaving the wall top drops
   the ball into the slab gutter and invalidates the attempt.
+- Wall dodge uses the normal ten-pin scorecard. Every frame selects one of ten
+  progressively denser slalom gates reconstructed from the supplied gameplay
+  video. Walls participate in the 120 Hz continuous collision simulation.
+- Wall visuals are temporary real server blocks rather than Java-only Display
+  Entity geometry. Java and Bedrock see the same course; only air is replaced,
+  and original block data is restored on stage change, abort or shutdown.
 
 ## Build
 
@@ -75,7 +81,7 @@ Requirements: JDK 25 and Gradle 8.10 or the included wrapper.
 ./gradlew clean test shadowJar
 ```
 
-The built plugin is `build/libs/MonaBowling-0.5.0-alpha.12.jar`.
+The built plugin is `build/libs/MonaBowling-0.6.0-alpha.13.jar`.
 
 Citizens 2.0.43 build 4230 is an optional runtime integration. When it is present,
 an administrator can run `/setnpc` at the desired location to create or move the
@@ -88,11 +94,11 @@ Player commands:
 
 - `/bowmenu` — lane, mode, 1–4 players, public lobby, stats and ranking GUI
 - `/bowling`
-- `/bowling join [standard|hundred-pin] [lane-id]`
+- `/bowling join [standard|hundred-pin|wall-dodge] [lane-id]`
 - `/bowling leave`
 - `/bowling client`
-- `/bowling stats [standard|hundred-pin|spin-control]`
-- `/bowling top [standard|hundred-pin|spin-control]`
+- `/bowling stats [standard|hundred-pin|wall-dodge]`
+- `/bowling top [standard|hundred-pin|wall-dodge]`
 - `/bowling help`
 
 Administration:
@@ -107,6 +113,8 @@ Administration:
 
 `/bowling join [lane-id]` remains a backward-compatible standard-game command.
 `/bowling join hundred-pin [lane-id]` starts a 100-pin game.
+`/bowling join wall-dodge [lane-id]` starts wall dodge. Legacy `spin-control`
+lane/config data is read as `wall-dodge` during migration.
 `/bowling leave` safely ends the session and returns the player.
 For multiplayer, create a 2–4 player public lobby in `/bowmenu`; other players
 join it from the lobby list. The lobby starts when full, or the owner can start early.
@@ -148,7 +156,8 @@ included. Future visual and audio assets must be original.
 ## Verification boundary
 
 Automated tests cover schema migration, lane persistence, statistics, ranking,
-model validation, ten-pin and 100-pin scoring, split topology, ball/pin dynamics,
+model validation, ten-pin and 100-pin scoring, all ten wall-dodge layouts,
+split topology, ball/pin dynamics,
 production-spacing 100-pin collision chains, secret-strike corridor validation,
 deterministic state and async runtime lifecycle. Production deployment and
 real-player Java/Bedrock gameplay remain unverified. The Phase 5 rack is an

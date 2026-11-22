@@ -1,4 +1,4 @@
-# MonaBowling 管理者向け設置手順（Phase 5）
+# MonaBowling 管理者向け設置手順（Phase 6）
 
 ## 導入前提
 
@@ -12,7 +12,7 @@ Java版専用として安全に起動します。
 
 ## 導入
 
-1. `MonaBowling-0.5.0-alpha.12.jar`をHubのプラグイン領域へ配置します。
+1. `MonaBowling-0.6.0-alpha.13.jar`をHubのプラグイン領域へ配置します。
 2. サーバーを再起動します。Paperの全体reloadは使用しません。
 3. 起動ログでSQLite schema version 1とMonaBowling enabledを確認します。
 4. `/bowling admin debug`でDBと任意連携の状態を確認します。
@@ -75,6 +75,17 @@ NPC IDは`citizens.npc-id`へ保存され、受付識別子はCitizensの永続�
 100ピンではレーン物理幅を広げています。表示が壁や隣レーンへ重なる場合は、実際の
 建築間隔を広げてください。描画負荷は`rendering.maximum-display-updates-per-tick`、
 同時負荷は`matches.max-concurrent-hundred-pin`で制限できます。
+
+## かべよけ確認
+
+1. `/bowling join wall-dodge lane01`で開始し、1フレーム目の壁が表示されることを確認します。
+2. 壁へ正面衝突させ、球が壁を貫通せず減速反射することを確認します。
+3. フレームが進むたびに配置が変わり、10フレーム目まで通れる隙間が残ることを確認します。
+4. Java版と統合版で壁のブロック位置が一致することを確認します。
+5. 退出、切断、異常終了、Hub停止後に壁ブロックが残らないことを確認します。
+
+壁は空気ブロックだけを`wall-dodge.wall-material`へ一時的に置き換えます。既存建築に
+重なる地点は変更しません。各レーンの投球線からピンまで6ブロック以上必要です。
 
 ## BungeeCord・統合版
 

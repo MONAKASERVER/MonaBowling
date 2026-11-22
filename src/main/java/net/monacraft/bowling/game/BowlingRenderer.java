@@ -1,6 +1,7 @@
 package net.monacraft.bowling.game;
 
 import net.monacraft.bowling.physics.PhysicsSnapshot;
+import net.monacraft.bowling.physics.Obstacle;
 import net.monacraft.bowling.physics.Vec2;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -8,6 +9,7 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.block.Block;
 import org.bukkit.entity.BlockDisplay;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
@@ -38,14 +40,16 @@ final class BowlingRenderer implements AutoCloseable {
     private final int maximumUpdatesPerTick;
     private final float pinWidth;
     private final float pinHeight;
+    private final Material wallMaterial;
     private final Map<Integer, Entity> pins = new HashMap<>();
     private final Map<Integer, VisualState> lastPinStates = new HashMap<>();
     private final List<Entity> secretSwitches = new java.util.ArrayList<>();
+    private final Map<Block, BlockData> obstacleBlocks = new HashMap<>();
     private Entity ball;
 
     BowlingRenderer(LaneTransform transform, List<Vec2> rack, RenderingProfiler profiler,
                     boolean armorStandFallback, int maximumUpdatesPerTick,
-                    double pinWidth, double pinHeight) {
+                    double pinWidth, double pinHeight, Material wallMaterial) {
         this.transform = transform;
         this.rack = rack;
         this.profiler = profiler;
@@ -53,6 +57,7 @@ final class BowlingRenderer implements AutoCloseable {
         this.maximumUpdatesPerTick = maximumUpdatesPerTick;
         this.pinWidth = (float) pinWidth;
         this.pinHeight = (float) pinHeight;
+        this.wallMaterial = wallMaterial;
     }
 
     void resetRack(Set<Integer> standing) {
@@ -97,6 +102,29 @@ final class BowlingRenderer implements AutoCloseable {
                     Material.REDSTONE_BLOCK)
                     : spawnSwitchDisplay(transform.worldPosition(position, 0.08));
             secretSwitches.add(visual);
+        }
+    }
+
+    /**
+     * Uses real, temporary blocks rather than display entities. This deliberately
+     * makes wall visibility independent of Geyser's display-entity translation.
+     * Only air is replaced and every touched block is restored on stage change
+     * or session cleanup.
+     */
+    void showObstacles(List<Obstacle> obstacles) {
+        clearObstacles();
+        for (Obstacle obstacle : obstacles) {
+            double centreZ = (obstacle.minimumZ() + obstacle.maximumZ()) * 0.5;
+            double span = obstacle.maximumX() - obstacle.minimumX();
+            int samples = Math.max(1, (int) Math.ceil(span / 0.45));
+            for (int sample = 0; sample <= samples; sample++) {
+                double ratio = sample / (double) samples;
+                double x = obstacle.minimumX() + span * ratio;
+                Block block = transform.worldPosition(new Vec2(x, centreZ), 0.12).getBlock();
+                if (!block.getType().isAir() || obstacleBlocks.containsKey(block)) continue;
+                obstacleBlocks.put(block, block.getBlockData().clone());
+                block.setType(wallMaterial, false);
+            }
         }
     }
 
@@ -279,10 +307,21 @@ final class BowlingRenderer implements AutoCloseable {
         lastPinStates.clear();
     }
 
+    private void clearObstacles() {
+        for (Map.Entry<Block, BlockData> entry : obstacleBlocks.entrySet()) {
+            Block block = entry.getKey();
+            if (block.getType() == wallMaterial) {
+                block.setBlockData(entry.getValue(), false);
+            }
+        }
+        obstacleBlocks.clear();
+    }
+
     @Override
     public void close() {
         removeBall();
         removePins();
+        clearObstacles();
         secretSwitches.forEach(Entity::remove);
         secretSwitches.clear();
     }

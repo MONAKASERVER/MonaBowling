@@ -4,6 +4,7 @@ import net.monacraft.bowling.command.BowlingCommand;
 import net.monacraft.bowling.citizens.BowlingNpcService;
 import net.monacraft.bowling.config.BowlingSettings;
 import net.monacraft.bowling.config.PhysicsConfigLoader;
+import net.monacraft.bowling.config.WallDodgeSettings;
 import net.monacraft.bowling.crossplay.CrossplayService;
 import net.monacraft.bowling.data.BowlingDatabase;
 import net.monacraft.bowling.game.BowlingGameManager;
@@ -32,6 +33,7 @@ public final class MonaBowlingPlugin extends JavaPlugin {
     private LaneManager laneManager;
     private ExecutorService ioExecutor;
     private SimulationConfig physicsConfig;
+    private volatile WallDodgeSettings wallDodgeSettings;
     private PhysicsRuntime physicsRuntime;
     private BowlingGameManager gameManager;
     private CrossplayService crossplayService;
@@ -42,6 +44,7 @@ public final class MonaBowlingPlugin extends JavaPlugin {
         try {
             settings = BowlingSettings.from(getConfig());
             physicsConfig = PhysicsConfigLoader.from(getConfig());
+            wallDodgeSettings = WallDodgeSettings.from(getConfig());
             physicsRuntime = new PhysicsRuntime(physicsConfig, settings.physicsThreads());
             ioExecutor = Executors.newSingleThreadExecutor(
                     Thread.ofPlatform().name("MonaBowling-IO", 0).factory());
@@ -86,7 +89,7 @@ public final class MonaBowlingPlugin extends JavaPlugin {
                 });
             }
 
-            getLogger().info("MonaBowling Phase 5 enabled with " + initialLanes.size() + " lane(s)");
+            getLogger().info("MonaBowling Phase 6 enabled with " + initialLanes.size() + " lane(s)");
             getLogger().info("Cross-play providers: " + crossplayService.providerStatus());
             getLogger().info("Optional hooks: WorldGuard=" + isPluginAvailable("WorldGuard")
                     + ", PlaceholderAPI=" + isPluginAvailable("PlaceholderAPI")
@@ -132,6 +135,7 @@ public final class MonaBowlingPlugin extends JavaPlugin {
         reloadConfig();
         BowlingSettings reloaded = BowlingSettings.from(getConfig());
         SimulationConfig reloadedPhysics = PhysicsConfigLoader.from(getConfig());
+        WallDodgeSettings reloadedWallDodge = WallDodgeSettings.from(getConfig());
         if (!reloaded.databaseFile().equals(settings.databaseFile())
                 || reloaded.databaseBusyTimeoutMillis() != settings.databaseBusyTimeoutMillis()) {
             throw new IllegalArgumentException("database.file と busy-timeout の変更にはHub再起動が必要です");
@@ -144,6 +148,7 @@ public final class MonaBowlingPlugin extends JavaPlugin {
         }
         physicsRuntime.close();
         physicsConfig = reloadedPhysics;
+        wallDodgeSettings = reloadedWallDodge;
         physicsRuntime = new PhysicsRuntime(physicsConfig, reloaded.physicsThreads());
         settings = reloaded;
     }
@@ -162,6 +167,10 @@ public final class MonaBowlingPlugin extends JavaPlugin {
 
     public SimulationConfig physicsConfig() {
         return physicsConfig;
+    }
+
+    public WallDodgeSettings wallDodgeSettings() {
+        return wallDodgeSettings;
     }
 
     public BowlingGameManager gameManager() {

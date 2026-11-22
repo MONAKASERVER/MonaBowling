@@ -139,7 +139,11 @@ public record BowlingSettings(
     public static BowlingSettings from(FileConfiguration config) {
         EnumSet<GameMode> modes = EnumSet.noneOf(GameMode.class);
         for (GameMode mode : GameMode.values()) {
-            if (config.getBoolean("game-modes." + mode.configKey(), true)) {
+            boolean enabled = mode == GameMode.WALL_DODGE
+                    && !config.isSet("game-modes.wall-dodge")
+                    ? config.getBoolean("game-modes.spin-control", true)
+                    : config.getBoolean("game-modes." + mode.configKey(), true);
+            if (enabled) {
                 modes.add(mode);
             }
         }

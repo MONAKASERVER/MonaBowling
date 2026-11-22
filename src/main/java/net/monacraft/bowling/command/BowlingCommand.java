@@ -136,7 +136,7 @@ public final class BowlingCommand implements CommandExecutor, TabCompleter {
         }
         Optional<GameMode> parsed = parseMode(args, 1);
         if (parsed.isEmpty()) {
-            error(sender, "モードは standard / hundred-pin / spin-control です。");
+            error(sender, "モードは standard / hundred-pin / wall-dodge です。");
             return;
         }
         GameMode mode = parsed.get();
@@ -165,7 +165,7 @@ public final class BowlingCommand implements CommandExecutor, TabCompleter {
     private void showTop(CommandSender sender, String[] args) {
         Optional<GameMode> parsed = parseMode(args, 1);
         if (parsed.isEmpty()) {
-            error(sender, "モードは standard / hundred-pin / spin-control です。");
+            error(sender, "モードは standard / hundred-pin / wall-dodge です。");
             return;
         }
         GameMode mode = parsed.get();

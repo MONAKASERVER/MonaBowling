@@ -1,11 +1,11 @@
-# MonaBowling レーン建築寸法（Phase 5）
+# MonaBowling レーン建築寸法（Phase 6）
 
 すぐ建築できるファイルは
 [`schematics/README.md`](../schematics/README.md) にあります。Litematica用
 `.litematic` とWorldEdit/FAWE用 `.schem` の両方を収録しています。
 
 Minecraftの1ブロックを1mとして扱います。スタンダードと100ピンを同じレーンで
-遊べる、Phase 5既定設定向けの寸法です。
+遊べる、Phase 6既定設定向けの寸法です。かべよけも同じ通常レーン内へ一時壁を表示します。
 
 ## 寸法表
 

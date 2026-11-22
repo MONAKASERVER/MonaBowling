@@ -1,15 +1,19 @@
-# Test Results — Phase 5 + Citizens/Bedrock fixes — 2026-11-22 JST
+# Test Results — Phase 6 wall dodge — 2026-11-22 JST
 
 ## Automated build
 
 - Command: `gradlew clean test shadowJar --no-daemon`
 - Result: **SUCCESS**
-- Tests: **72 passed, 0 failed, 0 skipped**
-- Artifact: `MonaBowling-0.5.0-alpha.12.jar`
-- Artifact size: 14,566,766 bytes
-- SHA-256: `e6d10d84a3da9c45e59e31690c3c159348567bc590c53c0f78937888eed6c816`
+- Tests: **76 passed, 0 failed, 0 skipped**
+- Artifact: `MonaBowling-0.6.0-alpha.13.jar`
+- Artifact size: 14,575,424 bytes
+- SHA-256: `b70f89ef8b03d2fbd9217a5221cadc9a1a27a170087f3ca4dd990720ff782a09`
 
-Phase 5 additions covered by automated tests:
+Phase 6 additions covered by automated tests:
+
+- ten progressively denser wall-dodge stages remain inside the playable lane;
+- every generated wall gate leaves more than one bowling-ball width of clearance;
+- invalid stage numbers are rejected and legacy `spin-control` data migrates to `wall-dodge`;
 
 - Citizens skin URLs accept only public HTTPS PNG links and reject HTTP/non-PNG values;
 - 20 ordinary 100-pin trajectories remain below 95 pins while preserving a 40+ pin strong chain;
@@ -50,6 +54,13 @@ not a production TPS guarantee.
 
 - Paper: 26.1.2 build 74 stable
 - Java: Eclipse Temurin 25.0.4.1
+- Result: **SUCCESS** for `MonaBowling 0.6.0-alpha.13`
+- Tests loaded: Paper 26.1.2 build 74 and Citizens build 4230
+- Log: `MonaBowling Phase 6 enabled with 0 lane(s)`
+- Config reload, command registration, clean disable and shutdown: successful
+
+Previous Phase 5 production baseline:
+
 - Result: **SUCCESS**
 - Loaded plugins: `Citizens 2.0.43 build 4230`, `MonaBowling 0.5.0-alpha.12`
 - Log: `MonaBowling Phase 5 enabled with 0 lane(s)`
@@ -60,7 +71,21 @@ not a production TPS guarantee.
 - Clean disable and server shutdown: successful
 - Startup/shutdown plugin exceptions: none
 
-## Production Hub smoke test
+## Production Hub Phase 6 deployment
+
+- Deployment: **SUCCESS**, 2026-11-22 20:39 JST
+- Loaded: `MonaBowling 0.6.0-alpha.13`, Citizens build 4230, five existing lanes
+- Legacy production modes `standard,hundred-pin,spin-control` loaded without DB mutation;
+  the former working name is exposed as `wall-dodge`
+- Production config explicitly enables `wall-dodge` and defines block material,
+  thickness, restitution and disabled side bumpers
+- Hub, Main and Bungee services all remained/recovered `active`; ports 25565–25567 listen
+- Startup plugin exceptions: none
+- Production JAR SHA-256: `b70f89ef8b03d2fbd9217a5221cadc9a1a27a170087f3ca4dd990720ff782a09`
+- Backup: `/home/minecraft/backups/monabowling-alpha13-20261122-203653`
+- Real Java/Bedrock gameplay of all ten stages remains the final device check
+
+## Previous Production Hub Phase 5 smoke test
 
 - Deployment: **SUCCESS**, 2026-11-22 20:16 JST
 - Loaded plugins: `Citizens 2.0.43 build 4230`, `MonaBowling 0.5.0-alpha.12`

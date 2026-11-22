@@ -14,6 +14,7 @@ import net.monacraft.bowling.model.GameMode;
 import net.monacraft.bowling.model.LaneDefinition;
 import net.monacraft.bowling.physics.BallState;
 import net.monacraft.bowling.physics.LaneGeometry;
+import net.monacraft.bowling.physics.Obstacle;
 import net.monacraft.bowling.physics.PhysicsEvent;
 import net.monacraft.bowling.physics.PhysicsSnapshot;
 import net.monacraft.bowling.physics.PinLayouts;
@@ -102,10 +103,6 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
             message(player, NamedTextColor.RED, "現在は全レーンが使用中です。");
             return;
         }
-        if (mode == GameMode.SPIN_CONTROL) {
-            message(player, NamedTextColor.RED, "スピンコントロールはPhase 6で実装予定です。");
-            return;
-        }
         if (!plugin.settings().enabledModes().contains(mode)) {
             message(player, NamedTextColor.RED, mode.displayName() + "モードは現在無効です。");
             return;
@@ -141,10 +138,12 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
             boolean fallback = plugin.settings().bedrockArmorStandFallback() && profile.bedrock();
             renderer = new BowlingRenderer(transform, rack, renderingProfiler, fallback,
                     plugin.settings().maximumDisplayUpdatesPerTick(),
-                    plugin.settings().pinVisualWidth(), plugin.settings().pinVisualHeight());
+                    plugin.settings().pinVisualWidth(), plugin.settings().pinVisualHeight(),
+                    plugin.wallDodgeSettings().wallMaterial());
             Set<Integer> standing = fullRack(rack.size());
             renderer.resetRack(standing);
             showSecretSwitch(renderer, rack, mode);
+            showWallDodgeStage(renderer, transform, mode, 1);
 
             session = new Session(UUID.randomUUID(), lane, transform, rack, renderer,
                     mode, maximumPlayers, participant);
@@ -285,9 +284,12 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
         if (session.renderer.usingArmorStandFallback() == needsFallback) return;
         BowlingRenderer replacement = new BowlingRenderer(session.transform, session.rack,
                 renderingProfiler, needsFallback, plugin.settings().maximumDisplayUpdatesPerTick(),
-                plugin.settings().pinVisualWidth(), plugin.settings().pinVisualHeight());
+                plugin.settings().pinVisualWidth(), plugin.settings().pinVisualHeight(),
+                plugin.wallDodgeSettings().wallMaterial());
         replacement.resetRack(session.active().standing);
         showSecretSwitch(replacement, session.rack, session.mode);
+        showWallDodgeStage(replacement, session.transform, session.mode,
+                session.active().scoreCard.currentFrameNumber());
         session.renderer.close();
         session.renderer = replacement;
     }
@@ -299,6 +301,19 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
                 + plugin.settings().secretRailMaximumX()) * 0.5;
         double lastPinZ = rack.stream().mapToDouble(Vec2::z).max().orElse(0.0);
         renderer.showSecretSwitch(railX, lastPinZ + plugin.settings().secretSwitchOffset());
+    }
+
+    private void showWallDodgeStage(BowlingRenderer renderer, LaneTransform transform,
+                                    GameMode mode, int frameNumber) {
+        if (mode != GameMode.WALL_DODGE) return;
+        renderer.showObstacles(wallDodgeObstacles(transform, frameNumber));
+    }
+
+    private List<Obstacle> wallDodgeObstacles(LaneTransform transform, int frameNumber) {
+        return WallDodgeCourse.stage(frameNumber,
+                plugin.settings().standardLaneHalfWidth(), transform.pinDistance(),
+                plugin.wallDodgeSettings().wallThickness(),
+                plugin.wallDodgeSettings().restitution());
     }
 
     private void activateTurn(Session session) {
@@ -335,6 +350,8 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
             }
         }
         session.renderer.resetRack(active.standing);
+        showWallDodgeStage(session.renderer, session.transform, session.mode,
+                active.scoreCard.currentFrameNumber());
         session.state = SessionState.AIMING;
         session.lastInputNanos = 0L;
         activePlayer.sendActionBar(Component.text(active.playerName + " のターン — 第"
@@ -593,12 +610,18 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
                 .orElse(session.transform.pinDistance());
         boolean secretRailPhysics = session.mode == GameMode.HUNDRED_PIN
                 && plugin.settings().secretStrikeEnabled();
+        List<Obstacle> obstacles = session.mode == GameMode.WALL_DODGE
+                ? wallDodgeObstacles(session.transform, participant.scoreCard.currentFrameNumber())
+                : List.of();
+        boolean sideBumpers = session.mode == GameMode.WALL_DODGE
+                ? plugin.wallDodgeSettings().sideBumpers()
+                : plugin.settings().sideBumpers(session.mode);
         SimulationWorld world = new SimulationWorld(config,
                 new LaneGeometry(halfWidth, lastPinZ + 2.0, gutterWidth,
-                        plugin.settings().sideBumpers(session.mode),
+                        sideBumpers,
                         secretRailPhysics ? plugin.settings().secretRailMinimumX() : 0.0,
                         secretRailPhysics ? plugin.settings().secretRailMaximumX() : 0.0),
-                ball, physicsPins, List.of());
+                ball, physicsPins, obstacles);
         session.secretStrikeTracker = session.mode == GameMode.HUNDRED_PIN
                 && plugin.settings().secretStrikeEnabled()
                 ? new SecretStrikeTracker(plugin.settings().secretRailMinimumX(),
@@ -720,6 +743,7 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
             return;
         }
         int collisionSounds = 0;
+        int wallCollisions = 0;
         for (PhysicsEvent event : plugin.physicsRuntime().drainEvents(session.simulationId)) {
             if (event.type() == PhysicsEvent.Type.BALL_PIN_COLLISION
                     || event.type() == PhysicsEvent.Type.PIN_PIN_COLLISION) {
@@ -731,7 +755,15 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
                 session.transform.world().playSound(impact,
                         Sound.BLOCK_SLIME_BLOCK_HIT, 0.75f, 0.85f);
                 player.sendActionBar(Component.text("バンパー！", NamedTextColor.AQUA));
+            } else if (event.type() == PhysicsEvent.Type.OBSTACLE_COLLISION) {
+                wallCollisions++;
             }
+        }
+        if (wallCollisions > 0) {
+            Location impact = session.transform.worldPosition(snapshot.ball().position(), 0.15);
+            session.transform.world().playSound(impact,
+                    Sound.BLOCK_ANVIL_LAND, 0.55f, 1.45f);
+            player.sendActionBar(Component.text("壁に接触！", NamedTextColor.RED));
         }
         if (collisionSounds > 0) {
             float volume = (float) Math.min(1.0, 0.25 + Math.log1p(collisionSounds) * 0.12);
@@ -804,7 +836,7 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
         } else if (rollNumber == 1 && participant.standing.isEmpty()) {
             participant.strikeStreak = 0;
             showTitle(player, Component.text("SPARE", NamedTextColor.AQUA), Component.empty(), 5, 20, 10);
-        } else if (session.mode == GameMode.STANDARD && rollNumber == 0
+        } else if (session.mode != GameMode.HUNDRED_PIN && rollNumber == 0
                 && TenPinRackRules.isSplit(participant.standing)) {
             participant.strikeStreak = 0;
             showTitle(player, Component.text("SPLIT", NamedTextColor.RED),
@@ -935,8 +967,12 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
     private ItemStack createBall(ClientProfile profile, GameMode mode) {
         ItemStack item = new ItemStack(Material.SNOWBALL);
         ItemMeta meta = item.getItemMeta();
-        meta.displayName(Component.text(mode == GameMode.HUNDRED_PIN
-                ? "100ピン ボウリングボール" : "ボウリングボール", NamedTextColor.AQUA));
+        String ballName = switch (mode) {
+            case STANDARD -> "ボウリングボール";
+            case HUNDRED_PIN -> "100ピン ボウリングボール";
+            case WALL_DODGE -> "かべよけ ボウリングボール";
+        };
+        meta.displayName(Component.text(ballName, NamedTextColor.AQUA));
         String operation = profile.bedrock() && plugin.settings().alternativeBedrockInput()
                 ? "使用 / 攻撃：構える・リリース" : "右クリック：構える・リリース";
         meta.lore(List.of(Component.text("左右移動 + 視点：立ち位置・投球方向", NamedTextColor.GRAY),
