@@ -4,10 +4,10 @@
 
 - Command: `gradlew clean test shadowJar --no-daemon`
 - Result: **SUCCESS**
-- Tests: **78 passed, 0 failed, 0 skipped**
-- Artifact: `MonaBowling-0.6.0-alpha.14.jar`
-- Artifact size: 14,576,224 bytes
-- SHA-256: `85d9d11cb473623d35fa9818329dfa77caa1dd8e4104c6c53785a6d1721fb780`
+- Tests: **79 passed, 0 failed, 0 skipped**
+- Artifact: `MonaBowling-0.6.0-alpha.15.jar`
+- Artifact size: 14,576,348 bytes
+- SHA-256: `8d0dced75442d684d6068a0a24d8fd17e76ccc62ca52325514e55df9fe9eaf87`
 
 Phase 6 additions covered by automated tests:
 
@@ -15,8 +15,11 @@ Phase 6 additions covered by automated tests:
 - every generated wall gate leaves more than one bowling-ball width of clearance;
 - invalid stage numbers are rejected and legacy `spin-control` data migrates to `wall-dodge`;
 - wall blocks are sampled from segment centres rather than their two edges;
-- all ten gates on every one of the five production lane coordinate systems keep
-  at least one visibly empty Minecraft block column;
+- every obstacle on all five production lane coordinate systems leaves multiple
+  visibly empty Minecraft block columns;
+- every stage has a simulated collision-free outer throw that reaches the pin deck;
+- walls are isolated video-derived pieces rather than alternating full-width gates;
+- rolling, wall, bumper and pin sounds are delivered to participants at the foul line;
 
 - Citizens skin URLs accept only public HTTPS PNG links and reject HTTP/non-PNG values;
 - 20 ordinary 100-pin trajectories remain below 95 pins while preserving a 40+ pin strong chain;
@@ -78,6 +81,11 @@ Previous Phase 5 production baseline:
 
 Wall-visibility hotfix:
 
+- `0.6.0-alpha.15` deployed successfully on 2026-11-23
+- Full-width alternating gates were replaced with isolated video-derived wall pieces
+- All ten stages have a simulated collision-free outer throw reaching the pin deck
+- Rolling and collision audio is played locally to every participant at the foul line
+- Backup: `/home/minecraft/backups/monabowling-alpha15-20261123-0008`
 - `0.6.0-alpha.14` deployed successfully at 20:46 JST
 - The edge-sampling bug that rounded both wall segments into the passage was removed
 - All five production lane coordinate systems retain an empty visible block column

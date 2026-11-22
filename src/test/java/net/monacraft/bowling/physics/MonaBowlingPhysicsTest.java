@@ -1,5 +1,6 @@
 package net.monacraft.bowling.physics;
 
+import net.monacraft.bowling.game.WallDodgeCourse;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -287,6 +288,28 @@ class MonaBowlingPhysicsTest {
         assertTrue(world.ball().velocity().z() < 0.0,
                 () -> "velocity=" + world.ball().velocity());
         assertTrue(world.ball().position().z() < 0.4);
+    }
+
+    @Test
+    void everyWallDodgeStageHasAReachableCollisionFreeOuterLine() {
+        SimulationConfig config = PhysicsTestSupport.config();
+        for (int frame = 1; frame <= WallDodgeCourse.STAGES; frame++) {
+            BallState ball = new BallState(new Vec2(2.30, 0.0), new Vec2(0.0, 9.0), 0.0,
+                    config.ballRadius(), config.ballMass());
+            SimulationWorld world = new SimulationWorld(config,
+                    new LaneGeometry(2.7, 20.0, 0.4, false), ball, List.of(),
+                    WallDodgeCourse.stage(frame, 2.7, 18.0, 0.34, 0.38));
+            MonaBowlingPhysics engine = new MonaBowlingPhysics();
+            boolean wallHit = false;
+            for (int step = 0; step < 600 && ball.position().z() < 17.5; step++) {
+                MonaBowlingPhysics.StepResult result = engine.step(world);
+                wallHit |= result.events().stream()
+                        .anyMatch(event -> event.type() == PhysicsEvent.Type.OBSTACLE_COLLISION);
+            }
+            assertFalse(wallHit, "frame " + frame + " outer route struck a wall");
+            assertTrue(ball.position().z() >= 17.5,
+                    "frame " + frame + " outer route did not reach the pin deck");
+        }
     }
 
     @Test

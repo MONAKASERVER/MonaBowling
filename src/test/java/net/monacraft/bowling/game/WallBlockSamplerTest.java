@@ -11,14 +11,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WallBlockSamplerTest {
     @Test
-    void renderedBlockCentresNeverCloseGeneratedGate() {
+    void renderedBlockCentresStayInsideTheirWallSegment() {
         for (int frame = 1; frame <= WallDodgeCourse.STAGES; frame++) {
             List<Obstacle> walls = WallDodgeCourse.stage(frame, 2.7, 18.0, 0.34, 0.38);
-            for (int index = 0; index < walls.size(); index += 2) {
-                double leftEdge = WallBlockSampler.centres(walls.get(index)).getLast() + 0.5;
-                double rightEdge = WallBlockSampler.centres(walls.get(index + 1)).getFirst() - 0.5;
-                assertTrue(rightEdge - leftEdge >= 0.20,
-                        "frame " + frame + " rendered gate closed at pair " + index / 2);
+            for (Obstacle wall : walls) {
+                for (double centre : WallBlockSampler.centres(wall)) {
+                    assertTrue(centre >= wall.minimumX() && centre <= wall.maximumX(),
+                            "frame " + frame + " sampled outside wall bounds");
+                }
             }
         }
     }
@@ -40,21 +40,20 @@ class WallBlockSamplerTest {
             double rightX = -dz / distance;
             for (int frame = 1; frame <= WallDodgeCourse.STAGES; frame++) {
                 List<Obstacle> walls = WallDodgeCourse.stage(frame, 2.7, distance, 0.34, 0.38);
-                for (int index = 0; index < walls.size(); index += 2) {
+                for (int index = 0; index < walls.size(); index++) {
                     Set<Integer> occupied = new HashSet<>();
-                    for (int side = 0; side < 2; side++) {
-                        Obstacle wall = walls.get(index + side);
-                        double z = (wall.minimumZ() + wall.maximumZ()) * 0.5;
-                        for (double x : WallBlockSampler.centres(wall)) {
-                            occupied.add((int) Math.floor(lane[0] + rightX * x + forwardX * z));
-                        }
+                    Obstacle wall = walls.get(index);
+                    double z = (wall.minimumZ() + wall.maximumZ()) * 0.5;
+                    for (double x : WallBlockSampler.centres(wall)) {
+                        occupied.add((int) Math.floor(lane[0] + rightX * x + forwardX * z));
                     }
-                    int minimum = occupied.stream().mapToInt(Integer::intValue).min().orElseThrow();
-                    int maximum = occupied.stream().mapToInt(Integer::intValue).max().orElseThrow();
-                    long openColumns = java.util.stream.IntStream.rangeClosed(minimum, maximum)
-                            .filter(column -> !occupied.contains(column)).count();
-                    assertTrue(openColumns >= 1,
-                            "production lane closed in frame " + frame + " gate " + index / 2);
+                    Set<Integer> laneColumns = new HashSet<>();
+                    for (double x = -2.3; x <= 2.3; x += 0.10) {
+                        laneColumns.add((int) Math.floor(lane[0] + rightX * x + forwardX * z));
+                    }
+                    laneColumns.removeAll(occupied);
+                    assertTrue(laneColumns.size() >= 2,
+                            "production lane closed in frame " + frame + " wall " + index);
                 }
             }
         }

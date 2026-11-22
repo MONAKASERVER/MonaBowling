@@ -31,14 +31,14 @@ class WallDodgeCourseTest {
     }
 
     @Test
-    void leavesARealBallWidthOpeningAtEveryGate() {
+    void leavesAContinuousStraightOuterRouteInEveryStage() {
+        double routeX = 2.30;
+        double ballRadius = 0.1085;
         for (int frame = 1; frame <= WallDodgeCourse.STAGES; frame++) {
             List<Obstacle> obstacles = WallDodgeCourse.stage(frame, 2.7, 18.0, 0.34, 0.38);
-            for (int index = 0; index < obstacles.size(); index += 2) {
-                Obstacle left = obstacles.get(index);
-                Obstacle right = obstacles.get(index + 1);
-                assertTrue(right.minimumX() - left.maximumX() > 0.70,
-                        "stage " + frame + " gate is too narrow");
+            for (Obstacle obstacle : obstacles) {
+                assertTrue(routeX - ballRadius > obstacle.maximumX(),
+                        "stage " + frame + " blocks the guaranteed outer route");
             }
         }
     }

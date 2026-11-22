@@ -2,7 +2,6 @@ package net.monacraft.bowling.game;
 
 import net.monacraft.bowling.physics.Obstacle;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,61 +23,54 @@ public final class WallDodgeCourse {
                 || !Double.isFinite(pinDistance) || pinDistance < 6.0) {
             throw new IllegalArgumentException("lane is too small for wall dodge");
         }
-        double edge = halfWidth - 0.08;
-        // Minecraft renders the cross-play wall as whole blocks. These values
-        // keep at least one clearly empty block column after world-grid rounding.
-        double wideGap = Math.max(1.40, halfWidth * 0.48);
-        double narrowGap = Math.max(1.15, halfWidth * 0.40);
-        List<Gate> gates = switch (frameNumber) {
-            case 1 -> List.of(g(0.46, 0.46, wideGap));
-            case 2 -> List.of(g(0.34, -0.46, wideGap), g(0.65, 0.46, wideGap));
-            case 3 -> List.of(g(0.31, 0.48, wideGap), g(0.56, 0.00, wideGap),
-                    g(0.76, -0.48, wideGap));
-            case 4 -> List.of(g(0.28, -0.52, wideGap), g(0.50, 0.52, wideGap),
-                    g(0.72, -0.52, narrowGap));
-            case 5 -> List.of(g(0.26, 0.52, wideGap), g(0.43, -0.52, wideGap),
-                    g(0.61, 0.00, narrowGap), g(0.78, 0.52, narrowGap));
-            case 6 -> List.of(g(0.24, -0.55, wideGap), g(0.40, 0.55, wideGap),
-                    g(0.56, -0.55, narrowGap), g(0.72, 0.55, narrowGap));
-            case 7 -> List.of(g(0.23, 0.00, wideGap), g(0.38, -0.56, narrowGap),
-                    g(0.53, 0.56, narrowGap), g(0.68, 0.00, narrowGap),
-                    g(0.81, -0.56, narrowGap));
-            case 8 -> List.of(g(0.22, 0.56, narrowGap), g(0.36, -0.56, narrowGap),
-                    g(0.50, 0.20, narrowGap), g(0.64, -0.20, narrowGap),
-                    g(0.78, 0.56, narrowGap));
-            case 9 -> List.of(g(0.21, -0.58, narrowGap), g(0.34, 0.58, narrowGap),
-                    g(0.47, -0.20, narrowGap), g(0.60, 0.20, narrowGap),
-                    g(0.73, -0.58, narrowGap), g(0.84, 0.58, narrowGap));
-            case 10 -> List.of(g(0.20, 0.58, narrowGap), g(0.32, -0.58, narrowGap),
-                    g(0.44, 0.22, narrowGap), g(0.56, -0.22, narrowGap),
-                    g(0.68, 0.58, narrowGap), g(0.80, -0.58, narrowGap));
+        // The supplied video uses isolated wall pieces, not a full-width gate
+        // at every depth. Keep every piece away from the outer 0.75m corridor;
+        // a player can always choose a safe straight route while tighter centre
+        // lines still reward position and spin control.
+        List<Wall> walls = switch (frameNumber) {
+            case 1 -> List.of(w(0.00, 1.00, 0.48));
+            case 2 -> List.of(w(-0.32, 1.00, 0.38), w(0.32, 1.00, 0.68));
+            case 3 -> List.of(w(-0.35, 1.10, 0.32), w(0.00, 0.90, 0.56),
+                    w(0.35, 1.10, 0.76));
+            case 4 -> List.of(w(0.00, 1.35, 0.30), w(-0.38, 1.00, 0.53),
+                    w(0.38, 1.00, 0.75));
+            case 5 -> List.of(w(-0.40, 1.00, 0.27), w(0.10, 1.20, 0.44),
+                    w(0.40, 1.00, 0.62), w(-0.10, 1.20, 0.79));
+            case 6 -> List.of(w(0.38, 1.05, 0.25), w(-0.20, 1.10, 0.42),
+                    w(-0.38, 1.05, 0.60), w(0.20, 1.10, 0.78));
+            case 7 -> List.of(w(0.00, 1.30, 0.23), w(-0.40, 1.00, 0.37),
+                    w(0.25, 1.00, 0.51), w(0.40, 1.00, 0.66),
+                    w(-0.20, 1.10, 0.80));
+            case 8 -> List.of(w(-0.42, 1.00, 0.22), w(0.15, 1.15, 0.36),
+                    w(0.42, 1.00, 0.50), w(-0.15, 1.15, 0.64),
+                    w(0.00, 1.25, 0.79));
+            case 9 -> List.of(w(0.42, 1.00, 0.21), w(-0.20, 1.10, 0.33),
+                    w(-0.42, 1.00, 0.46), w(0.20, 1.10, 0.59),
+                    w(0.42, 1.00, 0.72), w(-0.15, 1.15, 0.83));
+            case 10 -> List.of(w(0.00, 1.35, 0.20), w(-0.42, 1.00, 0.32),
+                    w(0.25, 1.05, 0.44), w(0.42, 1.00, 0.56),
+                    w(-0.25, 1.05, 0.68), w(0.00, 1.35, 0.81));
             default -> throw new AssertionError();
         };
 
-        List<Obstacle> result = new ArrayList<>();
-        int index = 0;
-        for (Gate gate : gates) {
-            double z = pinDistance * gate.zRatio;
-            double centre = gate.gapCentreRatio * halfWidth;
-            double gapMin = Math.max(-edge, centre - gate.gapWidth / 2.0);
-            double gapMax = Math.min(edge, centre + gate.gapWidth / 2.0);
+        java.util.ArrayList<Obstacle> result = new java.util.ArrayList<>(walls.size());
+        for (int index = 0; index < walls.size(); index++) {
+            Wall wall = walls.get(index);
+            double z = pinDistance * wall.zRatio;
+            double centre = wall.centreRatio * halfWidth;
+            double minimumX = centre - wall.width / 2.0;
+            double maximumX = centre + wall.width / 2.0;
             double minZ = z - thickness / 2.0;
             double maxZ = z + thickness / 2.0;
-            if (gapMin > -edge + 0.08) {
-                result.add(new Obstacle("wall-" + frameNumber + '-' + index++ + "L",
-                        -edge, gapMin, minZ, maxZ, restitution));
-            }
-            if (gapMax < edge - 0.08) {
-                result.add(new Obstacle("wall-" + frameNumber + '-' + index++ + "R",
-                        gapMax, edge, minZ, maxZ, restitution));
-            }
+            result.add(new Obstacle("wall-" + frameNumber + '-' + index,
+                    minimumX, maximumX, minZ, maxZ, restitution));
         }
         return List.copyOf(result);
     }
 
-    private static Gate g(double zRatio, double gapCentreRatio, double gapWidth) {
-        return new Gate(zRatio, gapCentreRatio, gapWidth);
+    private static Wall w(double centreRatio, double width, double zRatio) {
+        return new Wall(centreRatio, width, zRatio);
     }
 
-    private record Gate(double zRatio, double gapCentreRatio, double gapWidth) { }
+    private record Wall(double centreRatio, double width, double zRatio) { }
 }

@@ -376,6 +376,16 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
         }
     }
 
+    /** Essential effects bypass distance attenuation so they remain audible at the foul line. */
+    private void playForParticipants(Session session, Sound sound, float volume, float pitch) {
+        for (Participant participant : session.participants) {
+            Player listener = plugin.getServer().getPlayer(participant.playerId);
+            if (listener != null) {
+                listener.playSound(listener.getLocation(), sound, volume, pitch);
+            }
+        }
+    }
+
     public void leave(Player player) {
         Session session = byPlayer.get(player.getUniqueId());
         if (session == null) {
@@ -736,6 +746,9 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
         }
         PhysicsSnapshot snapshot = optional.get();
         session.renderer.update(snapshot, session.physicsToRack);
+        if (snapshot.ball().active() && tick % 8L == 0L) {
+            playForParticipants(session, Sound.ENTITY_MINECART_RIDING, 0.18f, 0.72f);
+        }
         if (session.secretStrikeTracker != null
                 && session.secretStrikeTracker.sample(snapshot.ball().position(),
                 snapshot.ball().active())) {
@@ -754,6 +767,7 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
                 Location impact = session.transform.worldPosition(snapshot.ball().position(), 0.10);
                 session.transform.world().playSound(impact,
                         Sound.BLOCK_SLIME_BLOCK_HIT, 0.75f, 0.85f);
+                playForParticipants(session, Sound.BLOCK_SLIME_BLOCK_HIT, 0.45f, 0.85f);
                 player.sendActionBar(Component.text("バンパー！", NamedTextColor.AQUA));
             } else if (event.type() == PhysicsEvent.Type.OBSTACLE_COLLISION) {
                 wallCollisions++;
@@ -763,12 +777,15 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
             Location impact = session.transform.worldPosition(snapshot.ball().position(), 0.15);
             session.transform.world().playSound(impact,
                     Sound.BLOCK_ANVIL_LAND, 0.55f, 1.45f);
+            playForParticipants(session, Sound.BLOCK_ANVIL_LAND, 0.55f, 1.45f);
             player.sendActionBar(Component.text("壁に接触！", NamedTextColor.RED));
         }
         if (collisionSounds > 0) {
             float volume = (float) Math.min(1.0, 0.25 + Math.log1p(collisionSounds) * 0.12);
             session.transform.world().playSound(session.transform.worldPosition(
                     snapshot.ball().position(), 0), Sound.BLOCK_BONE_BLOCK_BREAK, volume, 1.1f);
+            playForParticipants(session, Sound.BLOCK_BONE_BLOCK_BREAK,
+                    Math.max(0.45f, volume * 0.75f), 1.1f);
         }
         if (snapshot.settled()) finishRoll(player, session, snapshot);
     }
