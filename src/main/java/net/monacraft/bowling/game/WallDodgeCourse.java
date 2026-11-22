@@ -25,8 +25,10 @@ public final class WallDodgeCourse {
             throw new IllegalArgumentException("lane is too small for wall dodge");
         }
         double edge = halfWidth - 0.08;
-        double wideGap = Math.max(0.92, halfWidth * 0.38);
-        double narrowGap = Math.max(0.76, halfWidth * 0.31);
+        // Minecraft renders the cross-play wall as whole blocks. These values
+        // keep at least one clearly empty block column after world-grid rounding.
+        double wideGap = Math.max(1.40, halfWidth * 0.48);
+        double narrowGap = Math.max(1.15, halfWidth * 0.40);
         List<Gate> gates = switch (frameNumber) {
             case 1 -> List.of(g(0.46, 0.46, wideGap));
             case 2 -> List.of(g(0.34, -0.46, wideGap), g(0.65, 0.46, wideGap));

@@ -4,16 +4,19 @@
 
 - Command: `gradlew clean test shadowJar --no-daemon`
 - Result: **SUCCESS**
-- Tests: **76 passed, 0 failed, 0 skipped**
-- Artifact: `MonaBowling-0.6.0-alpha.13.jar`
-- Artifact size: 14,575,424 bytes
-- SHA-256: `b70f89ef8b03d2fbd9217a5221cadc9a1a27a170087f3ca4dd990720ff782a09`
+- Tests: **78 passed, 0 failed, 0 skipped**
+- Artifact: `MonaBowling-0.6.0-alpha.14.jar`
+- Artifact size: 14,576,224 bytes
+- SHA-256: `85d9d11cb473623d35fa9818329dfa77caa1dd8e4104c6c53785a6d1721fb780`
 
 Phase 6 additions covered by automated tests:
 
 - ten progressively denser wall-dodge stages remain inside the playable lane;
 - every generated wall gate leaves more than one bowling-ball width of clearance;
 - invalid stage numbers are rejected and legacy `spin-control` data migrates to `wall-dodge`;
+- wall blocks are sampled from segment centres rather than their two edges;
+- all ten gates on every one of the five production lane coordinate systems keep
+  at least one visibly empty Minecraft block column;
 
 - Citizens skin URLs accept only public HTTPS PNG links and reject HTTP/non-PNG values;
 - 20 ordinary 100-pin trajectories remain below 95 pins while preserving a 40+ pin strong chain;
@@ -72,6 +75,14 @@ Previous Phase 5 production baseline:
 - Startup/shutdown plugin exceptions: none
 
 ## Production Hub Phase 6 deployment
+
+Wall-visibility hotfix:
+
+- `0.6.0-alpha.14` deployed successfully at 20:46 JST
+- The edge-sampling bug that rounded both wall segments into the passage was removed
+- All five production lane coordinate systems retain an empty visible block column
+- Hub, Main and Bungee are active; startup exceptions: none
+- Backup: `/home/minecraft/backups/monabowling-alpha14-20261122-2045`
 
 - Deployment: **SUCCESS**, 2026-11-22 20:39 JST
 - Loaded: `MonaBowling 0.6.0-alpha.13`, Citizens build 4230, five existing lanes

@@ -115,11 +115,7 @@ final class BowlingRenderer implements AutoCloseable {
         clearObstacles();
         for (Obstacle obstacle : obstacles) {
             double centreZ = (obstacle.minimumZ() + obstacle.maximumZ()) * 0.5;
-            double span = obstacle.maximumX() - obstacle.minimumX();
-            int samples = Math.max(1, (int) Math.ceil(span / 0.45));
-            for (int sample = 0; sample <= samples; sample++) {
-                double ratio = sample / (double) samples;
-                double x = obstacle.minimumX() + span * ratio;
+            for (double x : WallBlockSampler.centres(obstacle)) {
                 Block block = transform.worldPosition(new Vec2(x, centreZ), 0.12).getBlock();
                 if (!block.getType().isAir() || obstacleBlocks.containsKey(block)) continue;
                 obstacleBlocks.put(block, block.getBlockData().clone());
