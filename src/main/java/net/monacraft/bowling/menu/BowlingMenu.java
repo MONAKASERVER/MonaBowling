@@ -59,7 +59,7 @@ public final class BowlingMenu implements Listener {
             Material modeIcon = switch (mode) {
                 case STANDARD -> Material.BONE_BLOCK;
                 case HUNDRED_PIN -> Material.GOLD_BLOCK;
-                case WALL_DODGE -> Material.IRON_BLOCK;
+                case WALL_DODGE -> Material.POLISHED_BLACKSTONE_WALL;
             };
             inventory.setItem(10, item(modeIcon,
                     "モード: " + mode.displayName(), List.of("クリックで切り替え")));

@@ -59,22 +59,28 @@ class WallBlockSamplerTest {
             double distance = Math.hypot(dx, dz);
             double forwardX = dx / distance;
             double rightX = -dz / distance;
-            for (int frame = 1; frame <= WallDodgeCourse.STAGES; frame++) {
-                List<Obstacle> walls = WallDodgeCourse.stage(frame, 2.7, distance, 0.34, 0.38);
-                for (int index = 0; index < walls.size(); index++) {
-                    Set<Integer> occupied = new HashSet<>();
-                    Obstacle wall = walls.get(index);
-                    double z = (wall.minimumZ() + wall.maximumZ()) * 0.5;
-                    for (double x : WallBlockSampler.centres(wall)) {
-                        occupied.add((int) Math.floor(lane[0] + rightX * x + forwardX * z));
+            for (long seed = 0; seed < 25; seed++) {
+                for (int frame = 1; frame <= WallDodgeCourse.STAGES; frame++) {
+                    List<Obstacle> walls = WallDodgeCourse.stage(
+                            frame, 2.7, distance, 0.34, 0.38, seed);
+                    for (int index = 0; index < walls.size(); index++) {
+                        Set<Integer> occupied = new HashSet<>();
+                        Obstacle wall = walls.get(index);
+                        double z = (wall.minimumZ() + wall.maximumZ()) * 0.5;
+                        for (double x : WallBlockSampler.centres(wall)) {
+                            occupied.add((int) Math.floor(
+                                    lane[0] + rightX * x + forwardX * z));
+                        }
+                        Set<Integer> laneColumns = new HashSet<>();
+                        for (double x = -2.3; x <= 2.3; x += 0.10) {
+                            laneColumns.add((int) Math.floor(
+                                    lane[0] + rightX * x + forwardX * z));
+                        }
+                        laneColumns.removeAll(occupied);
+                        assertTrue(laneColumns.size() >= 2,
+                                "production lane closed for seed " + seed
+                                        + " frame " + frame + " wall " + index);
                     }
-                    Set<Integer> laneColumns = new HashSet<>();
-                    for (double x = -2.3; x <= 2.3; x += 0.10) {
-                        laneColumns.add((int) Math.floor(lane[0] + rightX * x + forwardX * z));
-                    }
-                    laneColumns.removeAll(occupied);
-                    assertTrue(laneColumns.size() >= 2,
-                            "production lane closed in frame " + frame + " wall " + index);
                 }
             }
         }

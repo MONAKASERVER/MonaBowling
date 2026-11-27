@@ -128,6 +128,8 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
         BowlingRenderer renderer = null;
         Session session = null;
         try {
+            UUID sessionId = UUID.randomUUID();
+            long courseSeed = sessionId.getMostSignificantBits() ^ sessionId.getLeastSignificantBits();
             ClientProfile profile = crossplay.profile(player.getUniqueId());
             LaneTransform transform = LaneTransform.from(plugin.getServer(), lane);
             List<Vec2> rack = mode == GameMode.HUNDRED_PIN
@@ -144,10 +146,10 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
             Set<Integer> standing = fullRack(rack.size());
             renderer.resetRack(standing);
             showSecretSwitch(renderer, rack, mode);
-            showWallDodgeStage(renderer, transform, mode, 1);
+            showWallDodgeStage(renderer, transform, mode, 1, courseSeed);
 
-            session = new Session(UUID.randomUUID(), lane, transform, rack, renderer,
-                    mode, maximumPlayers, participant);
+            session = new Session(sessionId, lane, transform, rack, renderer,
+                    mode, maximumPlayers, participant, courseSeed);
             byPlayer.put(player.getUniqueId(), session);
             byLane.put(lane.id(), session);
             ensureTicker();
@@ -295,7 +297,7 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
         // (and therefore erases) the newly placed walls.
         session.renderer.close();
         showWallDodgeStage(replacement, session.transform, session.mode,
-                session.active().scoreCard.currentFrameNumber());
+                session.active().scoreCard.currentFrameNumber(), session.courseSeed);
         session.renderer = replacement;
     }
 
@@ -309,20 +311,22 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
     }
 
     private void showWallDodgeStage(BowlingRenderer renderer, LaneTransform transform,
-                                    GameMode mode, int frameNumber) {
+                                    GameMode mode, int frameNumber, long courseSeed) {
         if (mode != GameMode.WALL_DODGE) return;
-        int placed = renderer.showObstacles(wallDodgeObstacles(transform, frameNumber));
+        int placed = renderer.showObstacles(wallDodgeObstacles(
+                transform, frameNumber, courseSeed));
         if (placed == 0) {
             plugin.getLogger().warning("Wall-dodge stage " + frameNumber
                     + " placed no visible blocks; check the saved lane Y coordinate and floor");
         }
     }
 
-    private List<Obstacle> wallDodgeObstacles(LaneTransform transform, int frameNumber) {
+    private List<Obstacle> wallDodgeObstacles(LaneTransform transform, int frameNumber,
+                                              long courseSeed) {
         return WallDodgeCourse.stage(frameNumber,
                 plugin.settings().standardLaneHalfWidth(), transform.pinDistance(),
                 plugin.wallDodgeSettings().wallThickness(),
-                plugin.wallDodgeSettings().restitution());
+                plugin.wallDodgeSettings().restitution(), courseSeed);
     }
 
     private void activateTurn(Session session) {
@@ -360,7 +364,7 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
         }
         session.renderer.resetRack(active.standing);
         showWallDodgeStage(session.renderer, session.transform, session.mode,
-                active.scoreCard.currentFrameNumber());
+                active.scoreCard.currentFrameNumber(), session.courseSeed);
         session.state = SessionState.AIMING;
         session.lastInputNanos = 0L;
         activePlayer.sendActionBar(Component.text(active.playerName + " のターン — 第"
@@ -1140,6 +1144,7 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
         private BowlingRenderer renderer;
         private final GameMode mode;
         private final int maximumPlayers;
+        private final long courseSeed;
         private final List<Participant> participants = new ArrayList<>();
         private final Map<Integer, Integer> physicsToRack = new HashMap<>();
         private SessionState state = SessionState.AIMING;
@@ -1157,7 +1162,7 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
 
         private Session(UUID id, LaneDefinition lane, LaneTransform transform,
                         List<Vec2> rack, BowlingRenderer renderer, GameMode mode,
-                        int maximumPlayers, Participant firstParticipant) {
+                        int maximumPlayers, Participant firstParticipant, long courseSeed) {
             this.id = id;
             this.lane = lane;
             this.transform = transform;
@@ -1165,6 +1170,7 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
             this.renderer = renderer;
             this.mode = mode;
             this.maximumPlayers = maximumPlayers;
+            this.courseSeed = courseSeed;
             this.participants.add(firstParticipant);
         }
 

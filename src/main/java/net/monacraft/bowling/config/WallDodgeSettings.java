@@ -26,13 +26,14 @@ public record WallDodgeSettings(
     }
 
     public static WallDodgeSettings from(FileConfiguration config) {
-        String materialName = config.getString("wall-dodge.wall-material", "IRON_BLOCK");
+        String materialName = config.getString(
+                "wall-dodge.wall-material", "POLISHED_BLACKSTONE_WALL");
         Material material = Material.matchMaterial(materialName == null ? "" : materialName);
         return new WallDodgeSettings(
                 config.getBoolean("wall-dodge.side-bumpers", false),
                 config.getDouble("wall-dodge.wall-thickness", 0.34),
                 config.getDouble("wall-dodge.restitution", 0.38),
-                config.getDouble("wall-dodge.hitbox-inset", 0.10),
+                config.getDouble("wall-dodge.hitbox-inset", 0.24),
                 material
         );
     }

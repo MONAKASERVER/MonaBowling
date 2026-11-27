@@ -5,7 +5,7 @@
 - Command: `gradlew clean test shadowJar --no-daemon`
 - Result: **SUCCESS**
 - Tests: **79 passed, 0 failed, 0 skipped**
-- Artifact: `MonaBowling-0.6.0-alpha.17.jar`
+- Artifact: `MonaBowling-0.6.0-alpha.18.jar`
 - Artifact size: 14,576,348 bytes
 - SHA-256: `8d0dced75442d684d6068a0a24d8fd17e76ccc62ca52325514e55df9fe9eaf87`
 
@@ -169,3 +169,18 @@ not reported as verified merely because the isolated Paper server started.
 - Hub, Main and Bungee services were all `active` after deployment.
 - Backup: `/home/minecraft/backups/monabowling-alpha17-20261127-165656`
 - Remaining acceptance check: confirm contact timing with a real Java or Bedrock client.
+
+## Alpha 18 random wall courses — 2026-11-27
+
+- Artifact: `MonaBowling-0.6.0-alpha.18.jar`
+- SHA-256: `f8559c8105e359c0664c8641ba1dbc5669efff0bee4cc94673df030acabba813`
+- Automated tests: 82 passed, 0 failed
+- Each match now derives its ten stable frame layouts from a fresh random course seed.
+- 100 seeds across all ten frames retained the guaranteed outer route.
+- 25 seeds across all five production lane transforms retained multiple open block columns.
+- Obstacles and the menu icon now use `POLISHED_BLACKSTONE_WALL`.
+- Wall-post collision is inset by 0.24m per side to match its narrow visual.
+- Hub deployment completed; five lanes loaded and Paper reached `Done` in 31.088 seconds.
+- Hub, Main and Bungee services were all `active` after deployment.
+- Backup: `/home/minecraft/backups/monabowling-alpha18-20261127-171725`
+- Remaining acceptance check: compare several newly created matches on Java and Bedrock clients.

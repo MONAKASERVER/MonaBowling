@@ -12,6 +12,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WallDodgeCourseTest {
     @Test
+    void sameSeedRecreatesTheSameCourseWhileDifferentSeedsVaryIt() {
+        List<Obstacle> first = WallDodgeCourse.stage(8, 2.7, 18.0, 0.34, 0.38, 12345L);
+        List<Obstacle> repeated = WallDodgeCourse.stage(8, 2.7, 18.0, 0.34, 0.38, 12345L);
+        List<Obstacle> different = WallDodgeCourse.stage(8, 2.7, 18.0, 0.34, 0.38, 98765L);
+
+        assertEquals(first, repeated);
+        assertFalse(first.equals(different), "different matches reused the same wall pattern");
+    }
+
+    @Test
     void exposesTenIncreasingStagesInsideThePlayableLane() {
         int previousCount = 0;
         for (int frame = 1; frame <= WallDodgeCourse.STAGES; frame++) {
@@ -34,11 +44,15 @@ class WallDodgeCourseTest {
     void leavesAContinuousStraightOuterRouteInEveryStage() {
         double routeX = 2.30;
         double ballRadius = 0.1085;
-        for (int frame = 1; frame <= WallDodgeCourse.STAGES; frame++) {
-            List<Obstacle> obstacles = WallDodgeCourse.stage(frame, 2.7, 18.0, 0.34, 0.38);
-            for (Obstacle obstacle : obstacles) {
-                assertTrue(routeX - ballRadius > obstacle.maximumX(),
-                        "stage " + frame + " blocks the guaranteed outer route");
+        for (long seed = 0; seed < 100; seed++) {
+            for (int frame = 1; frame <= WallDodgeCourse.STAGES; frame++) {
+                List<Obstacle> obstacles = WallDodgeCourse.stage(
+                        frame, 2.7, 18.0, 0.34, 0.38, seed);
+                for (Obstacle obstacle : obstacles) {
+                    assertTrue(routeX - ballRadius > obstacle.maximumX(),
+                            "seed " + seed + " stage " + frame
+                                    + " blocks the guaranteed outer route");
+                }
             }
         }
     }
