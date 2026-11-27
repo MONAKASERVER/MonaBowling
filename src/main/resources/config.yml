@@ -1,4 +1,4 @@
-# MonaBowling 0.6.0-alpha.16 — visible wall course + foul-line audio
+# MonaBowling 0.6.0-alpha.17 — visual-aligned wall collision
 # Paper 26.1.2 / Java 25 / BungeeCord Hub
 
 # Display language. The Phase 6 alpha includes Japanese messages.
@@ -64,6 +64,9 @@ wall-dodge:
   wall-material: IRON_BLOCK
   wall-thickness: 0.34
   restitution: 0.38
+  # Shrinks each real block's physical footprint by this amount on every side.
+  # 0.10 prevents a collision sound before the ball visibly reaches the wall.
+  hitbox-inset: 0.10
   # The original challenge has gutters rather than side bumpers.
   side-bumpers: false
 

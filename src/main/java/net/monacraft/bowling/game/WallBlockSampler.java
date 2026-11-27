@@ -1,6 +1,7 @@
 package net.monacraft.bowling.game;
 
 import net.monacraft.bowling.physics.Obstacle;
+import net.monacraft.bowling.physics.Vec2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,5 +20,18 @@ final class WallBlockSampler {
             centres.add(obstacle.minimumX() + span * ((index + 0.5) / blocks));
         }
         return List.copyOf(centres);
+    }
+
+    /** Builds a deliberately inset hitbox around one rendered 1x1 block. */
+    static Obstacle collisionBox(String id, Vec2 blockCentre, double inset,
+                                 double restitution) {
+        if (!Double.isFinite(inset) || inset < 0.0 || inset >= 0.5) {
+            throw new IllegalArgumentException("block hitbox inset must be in [0, 0.5)");
+        }
+        double halfExtent = 0.5 - inset;
+        return new Obstacle(id,
+                blockCentre.x() - halfExtent, blockCentre.x() + halfExtent,
+                blockCentre.z() - halfExtent, blockCentre.z() + halfExtent,
+                restitution);
     }
 }

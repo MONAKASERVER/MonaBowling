@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "net.monacraft"
-version = "0.6.0-alpha.16"
+version = "0.6.0-alpha.17"
 
 repositories {
     mavenCentral()

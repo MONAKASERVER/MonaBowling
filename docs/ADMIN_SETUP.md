@@ -12,7 +12,7 @@ Java版専用として安全に起動します。
 
 ## 導入
 
-1. `MonaBowling-0.6.0-alpha.16.jar`をHubのプラグイン領域へ配置します。
+1. `MonaBowling-0.6.0-alpha.17.jar`をHubのプラグイン領域へ配置します。
 2. サーバーを再起動します。Paperの全体reloadは使用しません。
 3. 起動ログでSQLite schema version 1とMonaBowling enabledを確認します。
 4. `/bowling admin debug`でDBと任意連携の状態を確認します。

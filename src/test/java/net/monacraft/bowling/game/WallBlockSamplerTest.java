@@ -1,6 +1,7 @@
 package net.monacraft.bowling.game;
 
 import net.monacraft.bowling.physics.Obstacle;
+import net.monacraft.bowling.physics.Vec2;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -8,8 +9,28 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class WallBlockSamplerTest {
+    @Test
+    void collisionBoxMatchesRenderedBlockWithConfiguredInset() {
+        Obstacle box = WallBlockSampler.collisionBox(
+                "visible-block", new Vec2(1.25, 8.75), 0.10, 0.38);
+
+        assertEquals(0.85, box.minimumX(), 1.0E-9);
+        assertEquals(1.65, box.maximumX(), 1.0E-9);
+        assertEquals(8.35, box.minimumZ(), 1.0E-9);
+        assertEquals(9.15, box.maximumZ(), 1.0E-9);
+        assertEquals(0.80, box.maximumX() - box.minimumX(), 1.0E-9);
+    }
+
+    @Test
+    void collisionBoxRejectsAnInsetThatRemovesTheWholeBlock() {
+        assertThrows(IllegalArgumentException.class, () -> WallBlockSampler.collisionBox(
+                "invalid", Vec2.ZERO, 0.5, 0.38));
+    }
+
     @Test
     void renderedBlockCentresStayInsideTheirWallSegment() {
         for (int frame = 1; frame <= WallDodgeCourse.STAGES; frame++) {

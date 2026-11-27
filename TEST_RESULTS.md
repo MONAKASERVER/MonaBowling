@@ -5,7 +5,7 @@
 - Command: `gradlew clean test shadowJar --no-daemon`
 - Result: **SUCCESS**
 - Tests: **79 passed, 0 failed, 0 skipped**
-- Artifact: `MonaBowling-0.6.0-alpha.16.jar`
+- Artifact: `MonaBowling-0.6.0-alpha.17.jar`
 - Artifact size: 14,576,348 bytes
 - SHA-256: `8d0dced75442d684d6068a0a24d8fd17e76ccc62ca52325514e55df9fe9eaf87`
 
@@ -156,3 +156,16 @@ not reported as verified merely because the isolated Paper server started.
 - Hub, Main and Bungee services were all `active` after deployment.
 - Backup: `/home/minecraft/backups/monabowling-alpha16-20261123-012041`
 - Remaining acceptance check: confirm the wall visually in a real Java or Bedrock wall-dodge match.
+
+## Alpha 17 visual-aligned wall collision — 2026-11-27
+
+- Artifact: `MonaBowling-0.6.0-alpha.17.jar`
+- SHA-256: `ff7cd7e14bc0521098870ff9f845064a0a9a0e0ee0d91b19b51519a024d4ff61`
+- Automated tests: 81 passed, 0 failed
+- Physics obstacles are generated from the real blocks successfully placed by the renderer.
+- Every block hitbox is inset by 0.10m per side, producing a 0.80m footprint inside its 1m visual.
+- Missing or skipped visual blocks no longer retain invisible planned collision boxes.
+- Hub deployment completed; five lanes loaded and Paper reached `Done` in 29.952 seconds.
+- Hub, Main and Bungee services were all `active` after deployment.
+- Backup: `/home/minecraft/backups/monabowling-alpha17-20261127-165656`
+- Remaining acceptance check: confirm contact timing with a real Java or Bedrock client.

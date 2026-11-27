@@ -139,7 +139,8 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
             renderer = new BowlingRenderer(transform, rack, renderingProfiler, fallback,
                     plugin.settings().maximumDisplayUpdatesPerTick(),
                     plugin.settings().pinVisualWidth(), plugin.settings().pinVisualHeight(),
-                    plugin.wallDodgeSettings().wallMaterial());
+                    plugin.wallDodgeSettings().wallMaterial(),
+                    plugin.wallDodgeSettings().hitboxInset());
             Set<Integer> standing = fullRack(rack.size());
             renderer.resetRack(standing);
             showSecretSwitch(renderer, rack, mode);
@@ -285,7 +286,8 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
         BowlingRenderer replacement = new BowlingRenderer(session.transform, session.rack,
                 renderingProfiler, needsFallback, plugin.settings().maximumDisplayUpdatesPerTick(),
                 plugin.settings().pinVisualWidth(), plugin.settings().pinVisualHeight(),
-                plugin.wallDodgeSettings().wallMaterial());
+                plugin.wallDodgeSettings().wallMaterial(),
+                plugin.wallDodgeSettings().hitboxInset());
         replacement.resetRack(session.active().standing);
         showSecretSwitch(replacement, session.rack, session.mode);
         // The previous renderer owns the same real wall blocks. Close it before
@@ -628,7 +630,7 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
         boolean secretRailPhysics = session.mode == GameMode.HUNDRED_PIN
                 && plugin.settings().secretStrikeEnabled();
         List<Obstacle> obstacles = session.mode == GameMode.WALL_DODGE
-                ? wallDodgeObstacles(session.transform, participant.scoreCard.currentFrameNumber())
+                ? session.renderer.visibleObstacles()
                 : List.of();
         boolean sideBumpers = session.mode == GameMode.WALL_DODGE
                 ? plugin.wallDodgeSettings().sideBumpers()

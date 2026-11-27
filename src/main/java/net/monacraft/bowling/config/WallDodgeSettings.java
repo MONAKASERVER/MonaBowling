@@ -7,6 +7,7 @@ public record WallDodgeSettings(
         boolean sideBumpers,
         double wallThickness,
         double restitution,
+        double hitboxInset,
         Material wallMaterial
 ) {
     public WallDodgeSettings {
@@ -15,6 +16,9 @@ public record WallDodgeSettings(
         }
         if (!Double.isFinite(restitution) || restitution < 0.0 || restitution > 1.0) {
             throw new IllegalArgumentException("wall-dodge.restitution must be in [0, 1]");
+        }
+        if (!Double.isFinite(hitboxInset) || hitboxInset < 0.0 || hitboxInset > 0.35) {
+            throw new IllegalArgumentException("wall-dodge.hitbox-inset must be in [0, 0.35]");
         }
         if (wallMaterial == null || !wallMaterial.isBlock() || wallMaterial.isAir()) {
             throw new IllegalArgumentException("wall-dodge.wall-material must be a visible block material");
@@ -28,6 +32,7 @@ public record WallDodgeSettings(
                 config.getBoolean("wall-dodge.side-bumpers", false),
                 config.getDouble("wall-dodge.wall-thickness", 0.34),
                 config.getDouble("wall-dodge.restitution", 0.38),
+                config.getDouble("wall-dodge.hitbox-inset", 0.10),
                 material
         );
     }

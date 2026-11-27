@@ -41,15 +41,18 @@ final class BowlingRenderer implements AutoCloseable {
     private final float pinWidth;
     private final float pinHeight;
     private final Material wallMaterial;
+    private final double wallHitboxInset;
     private final Map<Integer, Entity> pins = new HashMap<>();
     private final Map<Integer, VisualState> lastPinStates = new HashMap<>();
     private final List<Entity> secretSwitches = new java.util.ArrayList<>();
     private final Map<Block, BlockData> obstacleBlocks = new HashMap<>();
+    private List<Obstacle> visibleObstacles = List.of();
     private Entity ball;
 
     BowlingRenderer(LaneTransform transform, List<Vec2> rack, RenderingProfiler profiler,
                     boolean armorStandFallback, int maximumUpdatesPerTick,
-                    double pinWidth, double pinHeight, Material wallMaterial) {
+                    double pinWidth, double pinHeight, Material wallMaterial,
+                    double wallHitboxInset) {
         this.transform = transform;
         this.rack = rack;
         this.profiler = profiler;
@@ -58,6 +61,7 @@ final class BowlingRenderer implements AutoCloseable {
         this.pinWidth = (float) pinWidth;
         this.pinHeight = (float) pinHeight;
         this.wallMaterial = wallMaterial;
+        this.wallHitboxInset = wallHitboxInset;
     }
 
     void resetRack(Set<Integer> standing) {
@@ -113,17 +117,28 @@ final class BowlingRenderer implements AutoCloseable {
      */
     int showObstacles(List<Obstacle> obstacles) {
         clearObstacles();
+        java.util.ArrayList<Obstacle> rendered = new java.util.ArrayList<>();
         for (Obstacle obstacle : obstacles) {
             double centreZ = (obstacle.minimumZ() + obstacle.maximumZ()) * 0.5;
+            int blockIndex = 0;
             for (double x : WallBlockSampler.centres(obstacle)) {
                 Block block = supportedAirBlock(transform.worldPosition(
                         new Vec2(x, centreZ), 0.0).getBlock());
                 if (block == null || obstacleBlocks.containsKey(block)) continue;
                 obstacleBlocks.put(block, block.getBlockData().clone());
                 block.setType(wallMaterial, false);
+                Vec2 blockCentre = transform.localPosition(block.getLocation().add(0.5, 0.0, 0.5));
+                rendered.add(WallBlockSampler.collisionBox(
+                        obstacle.id() + "-block-" + blockIndex++, blockCentre,
+                        wallHitboxInset, obstacle.restitution()));
             }
         }
+        visibleObstacles = List.copyOf(rendered);
         return obstacleBlocks.size();
+    }
+
+    List<Obstacle> visibleObstacles() {
+        return visibleObstacles;
     }
 
     /**
@@ -331,6 +346,7 @@ final class BowlingRenderer implements AutoCloseable {
             }
         }
         obstacleBlocks.clear();
+        visibleObstacles = List.of();
     }
 
     @Override
