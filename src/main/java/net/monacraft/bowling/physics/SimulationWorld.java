@@ -8,7 +8,7 @@ public final class SimulationWorld {
     private final LaneGeometry lane;
     private final BallState ball;
     private final List<PinState> pins;
-    private final List<Obstacle> obstacles;
+    private volatile List<Obstacle> obstacles;
     private long step;
     private boolean settled;
 
@@ -33,6 +33,7 @@ public final class SimulationWorld {
     public boolean settled() { return settled; }
     void incrementStep() { step++; }
     void settled(boolean value) { settled = value; }
+    void replaceObstacles(List<Obstacle> value) { obstacles = List.copyOf(value); }
 
     public PhysicsSnapshot snapshot() {
         PhysicsSnapshot.BallSnapshot ballSnapshot = new PhysicsSnapshot.BallSnapshot(

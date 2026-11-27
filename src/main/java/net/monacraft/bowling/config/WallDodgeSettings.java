@@ -8,6 +8,8 @@ public record WallDodgeSettings(
         double wallThickness,
         double restitution,
         double hitboxInset,
+        boolean movingWalls,
+        int movementIntervalTicks,
         Material wallMaterial
 ) {
     public WallDodgeSettings {
@@ -19,6 +21,10 @@ public record WallDodgeSettings(
         }
         if (!Double.isFinite(hitboxInset) || hitboxInset < 0.0 || hitboxInset > 0.35) {
             throw new IllegalArgumentException("wall-dodge.hitbox-inset must be in [0, 0.35]");
+        }
+        if (movementIntervalTicks < 4 || movementIntervalTicks > 40) {
+            throw new IllegalArgumentException(
+                    "wall-dodge.movement-interval-ticks must be in [4, 40]");
         }
         if (wallMaterial == null || !wallMaterial.isBlock() || wallMaterial.isAir()) {
             throw new IllegalArgumentException("wall-dodge.wall-material must be a visible block material");
@@ -34,6 +40,8 @@ public record WallDodgeSettings(
                 config.getDouble("wall-dodge.wall-thickness", 0.34),
                 config.getDouble("wall-dodge.restitution", 0.38),
                 config.getDouble("wall-dodge.hitbox-inset", 0.24),
+                config.getBoolean("wall-dodge.moving-walls", true),
+                config.getInt("wall-dodge.movement-interval-ticks", 10),
                 material
         );
     }

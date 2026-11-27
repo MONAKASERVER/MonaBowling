@@ -22,6 +22,26 @@ class WallDodgeCourseTest {
     }
 
     @Test
+    void laterFramesMoveWhileOpeningFramesRemainStatic() {
+        for (int frame = 1; frame <= WallDodgeCourse.STAGES; frame++) {
+            List<Obstacle> before = WallDodgeCourse.stage(
+                    frame, 2.7, 18.0, 0.34, 0.38, 4242L, 0L);
+            List<Obstacle> after = WallDodgeCourse.stage(
+                    frame, 2.7, 18.0, 0.34, 0.38, 4242L, 1L);
+            if (frame < 4) {
+                assertEquals(before, after, "opening frame unexpectedly moved");
+                assertEquals(0, WallDodgeCourse.movingWallCount(frame));
+            } else {
+                assertFalse(before.equals(after), "frame " + frame + " did not move");
+                long tagged = before.stream()
+                        .filter(wall -> wall.id().contains("-moving-"))
+                        .count();
+                assertEquals(WallDodgeCourse.movingWallCount(frame), tagged);
+            }
+        }
+    }
+
+    @Test
     void exposesTenIncreasingStagesInsideThePlayableLane() {
         int previousCount = 0;
         for (int frame = 1; frame <= WallDodgeCourse.STAGES; frame++) {
@@ -45,13 +65,15 @@ class WallDodgeCourseTest {
         double routeX = 2.30;
         double ballRadius = 0.1085;
         for (long seed = 0; seed < 100; seed++) {
-            for (int frame = 1; frame <= WallDodgeCourse.STAGES; frame++) {
-                List<Obstacle> obstacles = WallDodgeCourse.stage(
-                        frame, 2.7, 18.0, 0.34, 0.38, seed);
-                for (Obstacle obstacle : obstacles) {
-                    assertTrue(routeX - ballRadius > obstacle.maximumX(),
-                            "seed " + seed + " stage " + frame
-                                    + " blocks the guaranteed outer route");
+            for (long motion = 0; motion < 8; motion++) {
+                for (int frame = 1; frame <= WallDodgeCourse.STAGES; frame++) {
+                    List<Obstacle> obstacles = WallDodgeCourse.stage(
+                            frame, 2.7, 18.0, 0.34, 0.38, seed, motion);
+                    for (Obstacle obstacle : obstacles) {
+                        assertTrue(routeX - ballRadius > obstacle.maximumX(),
+                                "seed " + seed + " motion " + motion + " stage " + frame
+                                        + " blocks the guaranteed outer route");
+                    }
                 }
             }
         }

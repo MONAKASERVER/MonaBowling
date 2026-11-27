@@ -1,4 +1,4 @@
-# MonaBowling 0.6.0-alpha.18 — random wall courses
+# MonaBowling 0.6.0-alpha.19 — synchronized moving walls
 # Paper 26.1.2 / Java 25 / BungeeCord Hub
 
 # Display language. The Phase 6 alpha includes Japanese messages.
@@ -67,6 +67,10 @@ wall-dodge:
   # Shrinks each real block's physical footprint by this amount on every side.
   # 0.24 matches the narrow post of an isolated polished-blackstone wall.
   hitbox-inset: 0.24
+  # Frames 4-6 move one wall; frames 7-10 move two walls side-to-side.
+  moving-walls: true
+  # Real wall blocks advance one lane step at this interval on Java and Bedrock.
+  movement-interval-ticks: 10
   # The original challenge has gutters rather than side bumpers.
   side-bumpers: false
 

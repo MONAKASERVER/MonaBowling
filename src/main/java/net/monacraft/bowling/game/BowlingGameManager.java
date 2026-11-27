@@ -146,7 +146,7 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
             Set<Integer> standing = fullRack(rack.size());
             renderer.resetRack(standing);
             showSecretSwitch(renderer, rack, mode);
-            showWallDodgeStage(renderer, transform, mode, 1, courseSeed);
+            showWallDodgeStage(renderer, transform, mode, 1, courseSeed, 0L);
 
             session = new Session(sessionId, lane, transform, rack, renderer,
                     mode, maximumPlayers, participant, courseSeed);
@@ -276,6 +276,8 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
         hideLobbyBossBar(session);
         session.activeIndex = 0;
         session.state = SessionState.AIMING;
+        session.nextWallMovementTick = tick
+                + plugin.wallDodgeSettings().movementIntervalTicks();
         broadcast(session, session.mode.displayName() + " ゲームを開始します（"
                 + session.participants.size() + "人）", NamedTextColor.GOLD);
         activateTurn(session);
@@ -297,7 +299,8 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
         // (and therefore erases) the newly placed walls.
         session.renderer.close();
         showWallDodgeStage(replacement, session.transform, session.mode,
-                session.active().scoreCard.currentFrameNumber(), session.courseSeed);
+                session.active().scoreCard.currentFrameNumber(), session.courseSeed,
+                session.wallMotionStep);
         session.renderer = replacement;
     }
 
@@ -311,10 +314,11 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
     }
 
     private void showWallDodgeStage(BowlingRenderer renderer, LaneTransform transform,
-                                    GameMode mode, int frameNumber, long courseSeed) {
+                                    GameMode mode, int frameNumber, long courseSeed,
+                                    long motionStep) {
         if (mode != GameMode.WALL_DODGE) return;
         int placed = renderer.showObstacles(wallDodgeObstacles(
-                transform, frameNumber, courseSeed));
+                transform, frameNumber, courseSeed, motionStep));
         if (placed == 0) {
             plugin.getLogger().warning("Wall-dodge stage " + frameNumber
                     + " placed no visible blocks; check the saved lane Y coordinate and floor");
@@ -322,11 +326,11 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
     }
 
     private List<Obstacle> wallDodgeObstacles(LaneTransform transform, int frameNumber,
-                                              long courseSeed) {
+                                              long courseSeed, long motionStep) {
         return WallDodgeCourse.stage(frameNumber,
                 plugin.settings().standardLaneHalfWidth(), transform.pinDistance(),
                 plugin.wallDodgeSettings().wallThickness(),
-                plugin.wallDodgeSettings().restitution(), courseSeed);
+                plugin.wallDodgeSettings().restitution(), courseSeed, motionStep);
     }
 
     private void activateTurn(Session session) {
@@ -364,7 +368,8 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
         }
         session.renderer.resetRack(active.standing);
         showWallDodgeStage(session.renderer, session.transform, session.mode,
-                active.scoreCard.currentFrameNumber(), session.courseSeed);
+                active.scoreCard.currentFrameNumber(), session.courseSeed,
+                session.wallMotionStep);
         session.state = SessionState.AIMING;
         session.lastInputNanos = 0L;
         activePlayer.sendActionBar(Component.text(active.playerName + " のターン — 第"
@@ -676,6 +681,9 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
                 continue;
             }
             try {
+                if (!updateMovingWalls(session, player)) {
+                    continue;
+                }
                 if ((session.state == SessionState.AIMING || session.state == SessionState.CHARGING)
                         && plugin.settings().guideParticles() && tick % 5L == 0L) {
                     showGuide(player, session);
@@ -703,6 +711,34 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
                 abortSession(player, session, "ゲーム処理でエラーが発生したため安全に終了しました。");
             }
         }
+    }
+
+    private boolean updateMovingWalls(Session session, Player player) {
+        if (session.mode != GameMode.WALL_DODGE
+                || !plugin.wallDodgeSettings().movingWalls()
+                || session.state == SessionState.RESETTING
+                || tick < session.nextWallMovementTick) {
+            return true;
+        }
+        int frame = session.active().scoreCard.currentFrameNumber();
+        if (!WallDodgeCourse.hasMovingWalls(frame)) {
+            return true;
+        }
+        session.nextWallMovementTick = tick
+                + plugin.wallDodgeSettings().movementIntervalTicks();
+        session.wallMotionStep++;
+        showWallDodgeStage(session.renderer, session.transform, session.mode,
+                frame, session.courseSeed, session.wallMotionStep);
+        if (session.state == SessionState.ROLLING && session.simulationId != null
+                && !plugin.physicsRuntime().updateObstacles(
+                session.simulationId, session.renderer.visibleObstacles())) {
+            abortSession(player, session, "動く壁の同期に失敗したため安全に終了しました。");
+            return false;
+        }
+        if (session.wallMotionStep % 2L == 0L) {
+            playForParticipants(session, Sound.BLOCK_PISTON_EXTEND, 0.18f, 0.9f);
+        }
+        return true;
     }
 
     private void sampleYaw(Player player, Session session) {
@@ -1145,6 +1181,8 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
         private final GameMode mode;
         private final int maximumPlayers;
         private final long courseSeed;
+        private long wallMotionStep;
+        private long nextWallMovementTick;
         private final List<Participant> participants = new ArrayList<>();
         private final Map<Integer, Integer> physicsToRack = new HashMap<>();
         private SessionState state = SessionState.AIMING;

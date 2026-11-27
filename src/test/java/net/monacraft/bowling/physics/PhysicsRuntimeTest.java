@@ -11,6 +11,29 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PhysicsRuntimeTest {
     @Test
+    void runtimeAppliesMovingObstacleUpdatesOnItsWorkerThread() throws Exception {
+        SimulationConfig config = PhysicsTestSupport.config();
+        try (PhysicsRuntime runtime = new PhysicsRuntime(config, 1)) {
+            SimulationWorld world = PhysicsTestSupport.world(config,
+                    new BallState(Vec2.ZERO, new Vec2(0, 3), 0,
+                            config.ballRadius(), config.ballMass()), List.of());
+            UUID simulation = runtime.startSimulation(world);
+            assertTrue(runtime.updateObstacles(simulation, List.of(
+                    new Obstacle("moving-wall", -0.4, 0.4, 0.45, 0.65, 0.38))));
+
+            long deadline = System.nanoTime() + Duration.ofSeconds(1).toNanos();
+            boolean collided = false;
+            while (System.nanoTime() < deadline && !collided) {
+                collided = runtime.drainEvents(simulation).stream()
+                        .anyMatch(event -> event.type()
+                                == PhysicsEvent.Type.OBSTACLE_COLLISION);
+                Thread.sleep(5L);
+            }
+            assertTrue(collided, "updated moving wall never reached the simulation");
+        }
+    }
+
+    @Test
     void runtimeAcceptsModeSpecificPhysicsWithTheSameClock() throws Exception {
         SimulationConfig base = PhysicsTestSupport.config();
         SimulationConfig hundredPin = base.forHundredPin();

@@ -68,7 +68,8 @@ Phase 3 ten-pin loop, Phase 4 Java/Bedrock compatibility layer, Phase 5
   the ball into the slab gutter and invalidates the attempt.
 - Wall dodge uses the normal ten-pin scorecard. Every match receives a new course
   seed, producing different lateral positions and depths while the ten frames become
-  progressively denser. Walls participate in the 120 Hz continuous collision simulation.
+  progressively denser. Frames 4–6 move one wall and frames 7–10 move two walls
+  side-to-side, with visuals and the 120 Hz collision simulation updated together.
 - Wall visuals are temporary real server blocks rather than Java-only Display
   Entity geometry. Java and Bedrock see the same course; only air is replaced,
   and original block data is restored on stage change, abort or shutdown.
@@ -81,7 +82,7 @@ Requirements: JDK 25 and Gradle 8.10 or the included wrapper.
 ./gradlew clean test shadowJar
 ```
 
-The built plugin is `build/libs/MonaBowling-0.6.0-alpha.18.jar`.
+The built plugin is `build/libs/MonaBowling-0.6.0-alpha.19.jar`.
 
 Citizens 2.0.43 build 4230 is an optional runtime integration. When it is present,
 an administrator can run `/setnpc` at the desired location to create or move the

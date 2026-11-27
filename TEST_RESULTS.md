@@ -5,7 +5,7 @@
 - Command: `gradlew clean test shadowJar --no-daemon`
 - Result: **SUCCESS**
 - Tests: **79 passed, 0 failed, 0 skipped**
-- Artifact: `MonaBowling-0.6.0-alpha.18.jar`
+- Artifact: `MonaBowling-0.6.0-alpha.19.jar`
 - Artifact size: 14,576,348 bytes
 - SHA-256: `8d0dced75442d684d6068a0a24d8fd17e76ccc62ca52325514e55df9fe9eaf87`
 
@@ -184,3 +184,18 @@ not reported as verified merely because the isolated Paper server started.
 - Hub, Main and Bungee services were all `active` after deployment.
 - Backup: `/home/minecraft/backups/monabowling-alpha18-20261127-171725`
 - Remaining acceptance check: compare several newly created matches on Java and Bedrock clients.
+
+## Alpha 19 synchronized moving walls — 2026-11-27
+
+- Artifact: `MonaBowling-0.6.0-alpha.19.jar`
+- SHA-256: `809f9c520090f91ca499711e8dddd4f993c8324813c667a687f2e7ac8dafd1b1`
+- Automated tests: 84 passed, 0 failed
+- Frames 1-3 remain static, frames 4-6 move one wall and frames 7-10 move two walls.
+- The default movement interval is 10 ticks (0.5 seconds) with an eight-position ping-pong cycle.
+- Real wall blocks and immutable physics obstacle updates advance from the same motion step.
+- Physics updates cross the worker boundary through an atomic pending-obstacle handoff.
+- Every tested seed, frame and all eight motion phases retained the guaranteed outer route.
+- Hub deployment completed; five lanes loaded and Paper reached `Done` in 29.174 seconds.
+- Hub, Main and Bungee services were all `active` after deployment.
+- Backup: `/home/minecraft/backups/monabowling-alpha19-20261127-172638`
+- Remaining acceptance check: observe moving walls and contact timing on Java and Bedrock clients.

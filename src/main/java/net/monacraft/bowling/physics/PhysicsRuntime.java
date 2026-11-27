@@ -73,6 +73,16 @@ public final class PhysicsRuntime implements AutoCloseable {
         return List.copyOf(events);
     }
 
+    /** Queues immutable obstacle geometry for application on the physics thread. */
+    public boolean updateObstacles(UUID id, List<Obstacle> obstacles) {
+        Slot slot = simulations.get(id);
+        if (slot == null || slot.failed.get()) {
+            return false;
+        }
+        slot.pendingObstacles.set(List.copyOf(obstacles));
+        return true;
+    }
+
     public synchronized boolean removeSimulation(UUID id) {
         boolean removed = simulations.remove(id) != null;
         stopLoopIfIdle();
@@ -162,6 +172,10 @@ public final class PhysicsRuntime implements AutoCloseable {
             return;
         }
         try {
+            List<Obstacle> pending = slot.pendingObstacles.getAndSet(null);
+            if (pending != null) {
+                slot.world.replaceObstacles(pending);
+            }
             MonaBowlingPhysics.StepResult result = engine.step(slot.world);
             slot.snapshot.set(result.snapshot());
             slot.events.addAll(result.events());
@@ -224,6 +238,7 @@ public final class PhysicsRuntime implements AutoCloseable {
         private final SimulationWorld world;
         private final AtomicReference<PhysicsSnapshot> snapshot;
         private final ConcurrentLinkedQueue<PhysicsEvent> events = new ConcurrentLinkedQueue<>();
+        private final AtomicReference<List<Obstacle>> pendingObstacles = new AtomicReference<>();
         private final AtomicBoolean failed = new AtomicBoolean();
 
         private Slot(SimulationWorld world) {
