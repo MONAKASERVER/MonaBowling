@@ -288,9 +288,12 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
                 plugin.wallDodgeSettings().wallMaterial());
         replacement.resetRack(session.active().standing);
         showSecretSwitch(replacement, session.rack, session.mode);
+        // The previous renderer owns the same real wall blocks. Close it before
+        // the replacement places its course, otherwise the old cleanup restores
+        // (and therefore erases) the newly placed walls.
+        session.renderer.close();
         showWallDodgeStage(replacement, session.transform, session.mode,
                 session.active().scoreCard.currentFrameNumber());
-        session.renderer.close();
         session.renderer = replacement;
     }
 
@@ -306,7 +309,11 @@ public final class BowlingGameManager implements Listener, AutoCloseable {
     private void showWallDodgeStage(BowlingRenderer renderer, LaneTransform transform,
                                     GameMode mode, int frameNumber) {
         if (mode != GameMode.WALL_DODGE) return;
-        renderer.showObstacles(wallDodgeObstacles(transform, frameNumber));
+        int placed = renderer.showObstacles(wallDodgeObstacles(transform, frameNumber));
+        if (placed == 0) {
+            plugin.getLogger().warning("Wall-dodge stage " + frameNumber
+                    + " placed no visible blocks; check the saved lane Y coordinate and floor");
+        }
     }
 
     private List<Obstacle> wallDodgeObstacles(LaneTransform transform, int frameNumber) {

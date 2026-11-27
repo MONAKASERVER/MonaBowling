@@ -81,7 +81,7 @@ Requirements: JDK 25 and Gradle 8.10 or the included wrapper.
 ./gradlew clean test shadowJar
 ```
 
-The built plugin is `build/libs/MonaBowling-0.6.0-alpha.15.jar`.
+The built plugin is `build/libs/MonaBowling-0.6.0-alpha.16.jar`.
 
 Citizens 2.0.43 build 4230 is an optional runtime integration. When it is present,
 an administrator can run `/setnpc` at the desired location to create or move the

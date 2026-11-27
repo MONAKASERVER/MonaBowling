@@ -1,11 +1,18 @@
 param(
-    [string]$Version = "0.6.0-alpha.15"
+    [string]$Version = "0.6.0-alpha.16"
 )
 
 $ErrorActionPreference = "Stop"
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $dist = Join-Path $projectRoot "dist"
 [IO.Directory]::CreateDirectory($dist) | Out-Null
+
+$builtJar = Join-Path $projectRoot "build/libs/MonaBowling-$Version.jar"
+$releaseJar = Join-Path $dist "MonaBowling-$Version.jar"
+if (-not [IO.File]::Exists($builtJar)) {
+    throw "Built plugin not found: $builtJar. Run Gradle shadowJar first."
+}
+Copy-Item -LiteralPath $builtJar -Destination $releaseJar -Force
 
 Add-Type -AssemblyName System.IO.Compression
 
@@ -89,8 +96,13 @@ New-FilteredZip `
         "TEST_RESULTS.md"
     )
 
-Get-FileHash -Algorithm SHA256 `
+$hashes = Get-FileHash -Algorithm SHA256 `
     (Join-Path $dist "MonaBowling-$Version.jar"), `
     (Join-Path $dist "MonaBowling-Source-$Version.zip"), `
-    (Join-Path $dist "MonaBowling-LaneBlueprints-$Version.zip") |
-    Select-Object Hash, @{Name = "Name"; Expression = { Split-Path $_.Path -Leaf }}
+    (Join-Path $dist "MonaBowling-LaneBlueprints-$Version.zip")
+
+$hashes | ForEach-Object {
+    "{0}  {1}" -f $_.Hash.ToLowerInvariant(), (Split-Path $_.Path -Leaf)
+} | Set-Content -LiteralPath (Join-Path $dist "SHA256SUMS-$Version.txt") -Encoding utf8NoBOM
+
+$hashes | Select-Object Hash, @{Name = "Name"; Expression = { Split-Path $_.Path -Leaf }}

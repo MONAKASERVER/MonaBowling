@@ -5,7 +5,7 @@
 - Command: `gradlew clean test shadowJar --no-daemon`
 - Result: **SUCCESS**
 - Tests: **79 passed, 0 failed, 0 skipped**
-- Artifact: `MonaBowling-0.6.0-alpha.15.jar`
+- Artifact: `MonaBowling-0.6.0-alpha.16.jar`
 - Artifact size: 14,576,348 bytes
 - SHA-256: `8d0dced75442d684d6068a0a24d8fd17e76ccc62ca52325514e55df9fe9eaf87`
 
@@ -143,3 +143,16 @@ Wall-visibility hotfix:
 
 The manual matrix is in `docs/MANUAL_TEST_PLAN.md`. These client-only checks are
 not reported as verified merely because the isolated Paper server started.
+
+## Alpha 16 wall visibility hotfix — 2026-11-23
+
+- Artifact: `MonaBowling-0.6.0-alpha.16.jar`
+- SHA-256: `bc76730cc38beaa95a45b11d20be6d1cf26c6494575280fc4dacea6243820e2d`
+- Automated tests: 79 passed, 0 failed
+- Wall blocks now resolve the actual supported air block around each saved lane Y coordinate.
+- Cross-play renderer replacement now closes the old renderer before placing replacement walls.
+- A zero-wall placement emits a diagnostic warning rather than failing silently.
+- Hub deployment completed; five lanes loaded and Paper reached `Done` in 32.132 seconds.
+- Hub, Main and Bungee services were all `active` after deployment.
+- Backup: `/home/minecraft/backups/monabowling-alpha16-20261123-012041`
+- Remaining acceptance check: confirm the wall visually in a real Java or Bedrock wall-dodge match.

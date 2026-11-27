@@ -111,17 +111,37 @@ final class BowlingRenderer implements AutoCloseable {
      * Only air is replaced and every touched block is restored on stage change
      * or session cleanup.
      */
-    void showObstacles(List<Obstacle> obstacles) {
+    int showObstacles(List<Obstacle> obstacles) {
         clearObstacles();
         for (Obstacle obstacle : obstacles) {
             double centreZ = (obstacle.minimumZ() + obstacle.maximumZ()) * 0.5;
             for (double x : WallBlockSampler.centres(obstacle)) {
-                Block block = transform.worldPosition(new Vec2(x, centreZ), 0.12).getBlock();
-                if (!block.getType().isAir() || obstacleBlocks.containsKey(block)) continue;
+                Block block = supportedAirBlock(transform.worldPosition(
+                        new Vec2(x, centreZ), 0.0).getBlock());
+                if (block == null || obstacleBlocks.containsKey(block)) continue;
                 obstacleBlocks.put(block, block.getBlockData().clone());
                 block.setType(wallMaterial, false);
             }
         }
+        return obstacleBlocks.size();
+    }
+
+    /**
+     * Lane points are saved at the player's feet, but older lanes may have
+     * been saved on a full block or half a block above/below it. Resolve the
+     * first air block supported by the actual lane surface instead of assuming
+     * that a fixed Y offset is always air. This prevents an entire course from
+     * silently disappearing when the sampled block happens to be the floor.
+     */
+    private static Block supportedAirBlock(Block reference) {
+        for (int offset : new int[]{0, 1, -1, 2, -2, 3}) {
+            Block candidate = reference.getRelative(0, offset, 0);
+            if (candidate.getType().isAir()
+                    && !candidate.getRelative(0, -1, 0).getType().isAir()) {
+                return candidate;
+            }
+        }
+        return null;
     }
 
     void update(PhysicsSnapshot snapshot, Map<Integer, Integer> physicsToRack) {
